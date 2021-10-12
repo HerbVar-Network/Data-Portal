@@ -58,8 +58,8 @@ tags$h2("Pre-Data Submission Information"),
 # Add a subtitle & more information
   h3("Survey Identifying Information"),
   tags$h5("To ensure that the data you are about to submit is 
-          correctly filed, please enter the following 
-          survey-level information along with your data."),
+          correctly named, please enter the following 
+          survey-level information as you submit data."),
 
 # Add a warning about underscores
   tags$h5("Please", tags$strong("DO NOT"),
@@ -122,13 +122,18 @@ checkboxGroupInput(
 tags$h5("Note: failure to check a box ensures that the corresponding sheet",
         tags$strong("will not be uploaded")),
 
-), 
+## ------------------------------ ##
+   # P1-2-3: Reactive Button ####
+## ------------------------------ ##
+  ## Button does nothing (for now, will update)
+actionButton(inputId = "check_button",
+             label = "Pre-Submission Check")
 
 ## ----------------------------------------------- ##
           # P1-3: Main Panel Contents ####
 ## ----------------------------------------------- ##
-# Create main panel
-mainPanel(
+# Create main panel (& close out sidebar)
+), mainPanel(
 
 ## ------------------------------ ##
   # P1-3-1: File Name Preview ####
@@ -141,7 +146,7 @@ mainPanel(
   tags$h5("Does the above look correct as a file name for your survey?",
           tags$strong("If not,"), 
           "edit your inputs to the left")
-  
+
 ## ----------------------------------------------- ##
             # P1-4: Finish UI Part ####
 ## ----------------------------------------------- ##
@@ -153,12 +158,12 @@ mainPanel(
              # Part 2: Define Server (Internal Workings) ####
 ## --------------------------------------------------------------------- ##
 # Create the internal mechanism(s) of the app
-gg.server <- function(input, output) {
+gg.server <- function(input, output, session) {
 
 ## ----------------------------------------------- ##
-     # P2-1: File Name Output (see P1-3-2) ####  
+         # P2-1: File Name Output ####  
 ## ----------------------------------------------- ##
-  
+# Render the filename from the supplied information in the UI
   output$fileID <- renderPrint({
     paste(
       input$pi_name,
@@ -167,18 +172,28 @@ gg.server <- function(input, output) {
       str_sub(input$site,
               start = 1, end = 8),
       sep = '_')
-    })
+  })
+  
+## ----------------------------------------------- ##
+      # P2-2: Reactive Button 1 Response ####  
+## ----------------------------------------------- ##
+#  observeEvent(input$check_button, {})
   
   
   
+  
+## ----------------------------------------------- ##
+          # P2-3: Finish Server Part ####
+## ----------------------------------------------- ##
+# Close out formatting curly braces that wrap server components
+  ## server <- function(...) {...
 }
-
-
 
 ## --------------------------------------------------------------------- ##
                   # Part 3: Create Shiny App ####
 ## --------------------------------------------------------------------- ##
 # This is the simplest bit because you just call your UI and Server
+
 shinyApp(ui = gg.ui, server = gg.server)
 
 
