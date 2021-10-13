@@ -7,7 +7,7 @@
   ## Practice harvesting simple information from users
 
 # Call any needed libraries
-library(shiny); library(stringr)
+library(shiny); library(stringr); library(readxl)
 
 # Define user interface object
 ui <- fluidPage(
@@ -42,7 +42,35 @@ sidebarPanel(
 
 # Give the sidebar a global title
 tags$h2("Pre-Data Submission Information"),
-  
+
+## ------------------------------ ##
+      # Data Checkboxes ####
+## ------------------------------ ##
+# Prompt user to identify what data they collected
+tags$h3("What tabs of the Excel file should be uploaded?"),
+tags$h5("You", tags$strong("must"),
+        "use the template file provided ",
+        tags$a(href = "http://herbvar.org/protocols.html",
+               "here."),
+        "Check all that apply"),
+
+# Actual checkbox creation
+checkboxGroupInput(
+  inputId = 'data_collected',
+  label = "Excel Tabs with Data",
+  choices = c("siteData", "densityData", "plantData", "reproData",
+              "herbivoreData", "newColumns", "notes"),
+  selected = c("siteData"),
+  inline = T
+),
+
+# More notes on the checkboxes
+tags$h5("Note: failure to check a box ensures that the corresponding sheet",
+        tags$strong("will not be uploaded")),
+
+# Add a line separating this from the rest of the app
+tags$hr(),
+
 ## ------------------------------ ##
    # Gather File Name Parts ####
 ## ------------------------------ ##
@@ -93,39 +121,7 @@ tags$h2("Pre-Data Submission Information"),
             format = 'yyyy-mm-dd'),
   
   # Note on site name
-  tags$h5("Note: site name will be capped at 8 characters automatically"),
-
-## ------------------------------ ##
-      # Data Checkboxes ####
-## ------------------------------ ##
-# Prompt user to identify what data they collected
-tags$h3("What tabs of the Excel file should be uploaded"),
-tags$h5("You", tags$strong("must"),
-        "use the template file provided ",
-        tags$a(href = "http://herbvar.org/protocols.html",
-               "here."),
-        "Check all that apply"),
-
-# Actual checkbox creation
-checkboxGroupInput(
-  inputId = 'data_collected',
-  label = "Excel Tabs with Data",
-  choices = c("siteData", "densityData", "plantData", "reproData",
-              "herbivoreData", "newColumns", "notes"),
-  selected = c("siteData"),
-  inline = T
-),
-
-# More notes on the checkboxes
-tags$h5("Note: failure to check a box ensures that the corresponding sheet",
-        tags$strong("will not be uploaded")),
-
-## ------------------------------ ##
-      # Reactive Button ####
-## ------------------------------ ##
-  ## Button does nothing (for now, will update)
-actionButton(inputId = "check_button",
-             label = "Pre-Submission Check")
+  tags$h5("Note: site name will be capped at 8 characters automatically")
 
 ## ----------------------------------------------- ##
             # Main Panel Contents ####
@@ -142,12 +138,30 @@ actionButton(inputId = "check_button",
 
 # Output file name from user inputs
   verbatimTextOutput(outputId = "fileID",
-                     placeholder = T),
+                     placeholder = F),
 
 # And explain that is what it's doing
   tags$h5("Does the above look correct as a file name for your survey?",
           tags$strong("If not,"), 
-          "edit your inputs to the left")
+          "edit your inputs to the left"),
+
+## ------------------------------ ##
+          # File Input ####
+## ------------------------------ ##
+# Provide a place for Excel file uploading
+fileInput(
+  inputId = "file_upload",
+  label = tags$h3("Attach Excel File Here")),
+
+## ------------------------------ ##
+       # Reactive Button ####
+## ------------------------------ ##
+## Button does nothing (for now, will update)
+actionButton(inputId = "upload_button",
+             label = "Upload Attached Data"),
+
+# After clicking the button, return the message created in the server
+verbatimTextOutput("print_action")
 
 ## ----------------------------------------------- ##
             # Close UI Parentheses ####
