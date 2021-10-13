@@ -1,17 +1,10 @@
 ## --------------------------------------------------------------------- ##
-             # HerbVar - Mimicking a Google Form in R Shiny
+           # HerbVar Data Submission Portal - User Interface (UI)
 ## --------------------------------------------------------------------- ##
 # Written by Nick J Lyon
 
 # PURPOSE ####
   ## Practice harvesting simple information from users
-
-# Clear environment
-rm(list = ls())
-
-# Set working directory (should end in project directory)
-getwd()
-myWD <- getwd()
 
 # Call any needed libraries
 library(shiny); library(stringr)
@@ -19,7 +12,7 @@ library(shiny); library(stringr)
 ## --------------------------------------------------------------------- ##
                   # Part 1: Define User Interface ####
 ## --------------------------------------------------------------------- ##
-gg.ui <- fluidPage(
+ui <- fluidPage(
 
 ## ----------------------------------------------- ##
        # P1-1: GUI Header (Above Layout) ####
@@ -153,50 +146,6 @@ actionButton(inputId = "check_button",
 # Close out formatting parentheses that wrap all of the above
   ## fluidPage(...sidebarLayout(...mainPanel(...
 )))
-
-## --------------------------------------------------------------------- ##
-             # Part 2: Define Server (Internal Workings) ####
-## --------------------------------------------------------------------- ##
-# Create the internal mechanism(s) of the app
-gg.server <- function(input, output, session) {
-
-## ----------------------------------------------- ##
-         # P2-1: File Name Output ####  
-## ----------------------------------------------- ##
-# Render the filename from the supplied information in the UI
-  output$fileID <- renderPrint({
-    paste(
-      input$pi_name,
-      input$genus,
-      input$sp,
-      str_sub(input$site,
-              start = 1, end = 8),
-      sep = '_')
-  })
-  
-## ----------------------------------------------- ##
-      # P2-2: Reactive Button 1 Response ####  
-## ----------------------------------------------- ##
-#  observeEvent(input$check_button, {})
-  
-  
-  
-  
-## ----------------------------------------------- ##
-          # P2-3: Finish Server Part ####
-## ----------------------------------------------- ##
-# Close out formatting curly braces that wrap server components
-  ## server <- function(...) {...
-}
-
-## --------------------------------------------------------------------- ##
-                  # Part 3: Create Shiny App ####
-## --------------------------------------------------------------------- ##
-# This is the simplest bit because you just call your UI and Server
-
-shinyApp(ui = gg.ui, server = gg.server)
-
-
 
 # END ####
 
