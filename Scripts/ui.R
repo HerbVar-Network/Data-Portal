@@ -9,13 +9,11 @@
 # Call any needed libraries
 library(shiny); library(stringr)
 
-## --------------------------------------------------------------------- ##
-                  # Part 1: Define User Interface ####
-## --------------------------------------------------------------------- ##
+# Define user interface object
 ui <- fluidPage(
 
 ## ----------------------------------------------- ##
-       # P1-1: GUI Header (Above Layout) ####
+            # Header (Above Layout) ####
 ## ----------------------------------------------- ##
   # Add an app title
   tags$h2("HerbVar Data Submission Portal - Phase 2"),
@@ -37,7 +35,7 @@ ui <- fluidPage(
                 fluid = T,
                  
 ## ----------------------------------------------- ##
-           # P1-2: Sidebar Contents ####
+               # Sidebar Contents ####
 ## ----------------------------------------------- ##
 # Create the sidebar
 sidebarPanel(
@@ -46,7 +44,7 @@ sidebarPanel(
 tags$h2("Pre-Data Submission Information"),
   
 ## ------------------------------ ##
-  # P1-2-1: File Name Bits ####
+   # Gather File Name Parts ####
 ## ------------------------------ ##
 # Add a subtitle & more information
   h3("Survey Identifying Information"),
@@ -58,7 +56,7 @@ tags$h2("Pre-Data Submission Information"),
   tags$h5("Please", tags$strong("DO NOT"),
           "use underscores ('_') in your entries"),
   
-  # We need the following to uniquely name the file users submit
+  # We need the following to uniquely name the file users submit:
     ## PI name
   textInput(
     inputId = "pi_name",
@@ -98,7 +96,7 @@ tags$h2("Pre-Data Submission Information"),
   tags$h5("Note: site name will be capped at 8 characters automatically"),
 
 ## ------------------------------ ##
-   # P1-2-2: Data Checkboxes ####
+      # Data Checkboxes ####
 ## ------------------------------ ##
 # Prompt user to identify what data they collected
 tags$h3("What tabs of the Excel file should be uploaded"),
@@ -123,32 +121,36 @@ tags$h5("Note: failure to check a box ensures that the corresponding sheet",
         tags$strong("will not be uploaded")),
 
 ## ------------------------------ ##
-   # P1-2-3: Reactive Button ####
+      # Reactive Button ####
 ## ------------------------------ ##
   ## Button does nothing (for now, will update)
 actionButton(inputId = "check_button",
              label = "Pre-Submission Check")
 
 ## ----------------------------------------------- ##
-          # P1-3: Main Panel Contents ####
+            # Main Panel Contents ####
 ## ----------------------------------------------- ##
 # Create main panel (& close out sidebar)
 ), mainPanel(
 
 ## ------------------------------ ##
-  # P1-3-1: File Name Preview ####
+     # File Name Preview ####
 ## ------------------------------ ##
-  # Output file name from user inputs
+
+# Give it a title
   tags$h3("File Name Preview"),
+
+# Output file name from user inputs
   verbatimTextOutput(outputId = "fileID",
                      placeholder = T),
-    ## And explain that is what it's doing
+
+# And explain that is what it's doing
   tags$h5("Does the above look correct as a file name for your survey?",
           tags$strong("If not,"), 
           "edit your inputs to the left")
 
 ## ----------------------------------------------- ##
-            # P1-4: Finish UI Part ####
+            # Close UI Parentheses ####
 ## ----------------------------------------------- ##
 # Close out formatting parentheses that wrap all of the above
   ## fluidPage(...sidebarLayout(...mainPanel(...
