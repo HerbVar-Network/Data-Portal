@@ -26,6 +26,7 @@ server <- function(input, output, session) {
       input$sp,
       str_sub(input$site,
               start = 1, end = 8),
+      input$date,
       sep = '_')
   })
   

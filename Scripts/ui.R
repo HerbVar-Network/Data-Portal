@@ -86,6 +86,13 @@ tags$h2("Pre-Data Submission Information"),
     label = "Site Name",
     placeholder = "Site 1"
   ),
+
+    ## Sampling date
+  ### Gets around possible issue of Name_Species_Site not being unique / survey
+  dateInput(inputId = "date",
+            label = "Sampling Date (if sampling took >1 day, enter first day)",
+            min = "2000-01-01",
+            format = 'yyyy-mm-dd'),
   
   # Note on site name
   tags$h5("Note: site name will be capped at 8 characters automatically"),
