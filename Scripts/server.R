@@ -7,19 +7,16 @@
   ## Practice harvesting simple information from users
 
 # Call any needed libraries
-library(shiny); library(stringr)
+library(shiny); library(stringr); library(readxl)
 
-## --------------------------------------------------------------------- ##
-             # Part 2: Define Server (Internal Workings) ####
-## --------------------------------------------------------------------- ##
 # Create the internal mechanism(s) of the app
 server <- function(input, output, session) {
 
 ## ----------------------------------------------- ##
-         # P2-1: File Name Output ####  
+              # File Name Output ####  
 ## ----------------------------------------------- ##
 # Render the filename from the supplied information in the UI
-  output$fileID <- renderPrint({
+   output$fileID <- renderPrint({
     paste(
       input$pi_name,
       input$genus,
@@ -28,21 +25,68 @@ server <- function(input, output, session) {
               start = 1, end = 8),
       input$date,
       sep = '_')
-  })
+     })
   
 ## ----------------------------------------------- ##
-      # P2-2: Reactive Button 1 Response ####  
+             # Upload Data Button ####  
 ## ----------------------------------------------- ##
-#  observeEvent(input$check_button, {})
-  
+# If the "upload_button" is clicked:
+   observeEvent(input$upload_button, {
+     
+     # If the upload button is clicked but no data are attached:
+     if(is.null(input$file_upload))
+     {
+       # Generates pop-up warning
+       showModal(modalDialog(
+         title = "Error",
+         paste0("No file selected to upload."),
+         easyClose = TRUE,
+         footer = NULL
+       ))
+       # If they don't upload data print the message:
+       my_text('Please attach a file')
+     }
+     else
+     {
+       # Get the file from the app
+       upload <- input$file_upload
+       
+       # If the file is NULL, return NULL
+       if (is.null(upload)) {
+         return(NULL)
+       }
+       data_file <- as.data.frame(
+         read_excel(upload$datapath,
+                    sheet = "siteData",
+                    col_types = 'text'
+                    ))
+       # Set the reactiveVal called fileData to the file inputs
+       print(data_file)
+       fileData(data_file) 
+       
+       # Writing out the same file - but under a different name:
+       write.csv(x = data_file,
+                 # Name generated from the inputs in the UI
+                 file = paste(input$pi_name, input$genus, input$sp,
+                   str_sub(input$site, start = 1, end = 8),
+                   input$date, sep = '_'),
+                 row.names = F)
+       my_text('Data uploaded. Thank you!')
+     }
+   })
+   
+   fileData <- reactiveVal()
+   my_text <- reactiveVal()
+   output$attach_message <- renderText({my_text()})
+
 
   
 ## ----------------------------------------------- ##
-          # P2-3: Finish Server Part ####
+           # Close Server Parentheses ####
 ## ----------------------------------------------- ##
 # Close out formatting curly braces that wrap server components
   ## server <- function(...) {...
-}
+} 
 
 # END ####
 
