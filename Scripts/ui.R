@@ -145,13 +145,16 @@ tags$hr(),
           tags$strong("If not,"), 
           "edit your inputs to the left"),
 
+# Add a horizontal line
+tags$hr(),
+
 ## ------------------------------ ##
           # File Input ####
 ## ------------------------------ ##
 # Provide a place for Excel file uploading
-fileInput(
-  inputId = "file_upload",
-  label = tags$h3("Attach Excel File Here")),
+fileInput(inputId = "file_upload",
+          label = tags$h3("Attach Excel File Here"),
+          accept = ".xlsx"),
 
 ## ------------------------------ ##
        # Reactive Button ####
@@ -161,7 +164,7 @@ actionButton(inputId = "upload_button",
              label = "Upload Attached Data"),
 
 # After clicking the button, return the message created in the server
-verbatimTextOutput("print_action")
+verbatimTextOutput("attach_message")
 
 ## ----------------------------------------------- ##
             # Close UI Parentheses ####
