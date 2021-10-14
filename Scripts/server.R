@@ -28,10 +28,13 @@ server <- function(input, output, session) {
      })
   
 ## ----------------------------------------------- ##
-             # Upload Data Button ####  
+             # 'Upload Data' Button ####  
 ## ----------------------------------------------- ##
-# If the "upload_button" is clicked:
+# Handling the "upload_button"
    observeEvent(input$upload_button, {
+     
+     # Need to make the code actually wait for the data
+     req(input$file_upload)
      
      # If the upload button is clicked but no data are attached:
      if(is.null(input$file_upload))
@@ -55,21 +58,29 @@ server <- function(input, output, session) {
        if (is.null(upload)) {
          return(NULL)
        }
+       
+       # If a file is actually uploaded, read it in!
        data_file <- as.data.frame(
          read_excel(upload$datapath,
                     sheet = "siteData",
                     col_types = 'text'
-                    ))
-       # Set the reactiveVal called fileData to the file inputs
-       print(data_file)
+         ))
+       
+       # Set the reactive value called fileData to the file inputs
        fileData(data_file) 
+       
+       # Gather the name the users entered in the UI
+       surveyID <- paste(input$pi_name,
+                            input$genus,
+                            input$sp,
+                            str_sub(input$site,
+                                    start = 1, end = 8),
+                            input$date,
+                            sep = '_')
        
        # Writing out the same file - but under a different name:
        write.csv(x = data_file,
-                 # Name generated from the inputs in the UI
-                 file = paste(input$pi_name, input$genus, input$sp,
-                   str_sub(input$site, start = 1, end = 8),
-                   input$date, sep = '_'),
+                 file = paste(surveyID, ".csv"),
                  row.names = F)
        my_text('Data uploaded. Thank you!')
      }
@@ -78,16 +89,14 @@ server <- function(input, output, session) {
    fileData <- reactiveVal()
    my_text <- reactiveVal()
    output$attach_message <- renderText({my_text()})
-
-
-  
+   
 ## ----------------------------------------------- ##
            # Close Server Parentheses ####
 ## ----------------------------------------------- ##
 # Close out formatting curly braces that wrap server components
   ## server <- function(...) {...
-} 
-
+}
+   
 # END ####
 
 
