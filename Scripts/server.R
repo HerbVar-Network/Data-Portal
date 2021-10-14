@@ -28,6 +28,15 @@ server <- function(input, output, session) {
      })
   
 ## ----------------------------------------------- ##
+          # Collect Checkbox Choices ####
+## ----------------------------------------------- ##
+# Make the chosen checkboxes a small table for the user to examine
+   output$chosen <- renderTable(expr = input$data_collected,
+                              rownames = F,
+                              colnames = F,
+                              align = 'c')
+   
+## ----------------------------------------------- ##
              # 'Upload Data' Button ####  
 ## ----------------------------------------------- ##
 # Handling the "upload_button"
@@ -86,8 +95,11 @@ server <- function(input, output, session) {
      }
    })
    
+   # Call final fileData and my_text information
    fileData <- reactiveVal()
    my_text <- reactiveVal()
+   
+   # Produce a message following the button press
    output$attach_message <- renderText({my_text()})
    
 ## ----------------------------------------------- ##

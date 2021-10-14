@@ -41,7 +41,7 @@ ui <- fluidPage(
 sidebarPanel(
 
 # Give the sidebar a global title
-tags$h2("Pre-Data Submission Information"),
+tags$h2("Pre-Data Submission"),
 
 ## ------------------------------ ##
       # Data Checkboxes ####
@@ -129,6 +129,9 @@ tags$hr(),
 # Create main panel (& close out sidebar)
 ), mainPanel(
 
+# Give the main panel a title too
+  tags$h2("Data Submission Process"),
+  
 ## ------------------------------ ##
      # File Name Preview ####
 ## ------------------------------ ##
@@ -151,8 +154,20 @@ tags$hr(),
 ## ------------------------------ ##
   # Sheets to Upload Preview ####
 ## ------------------------------ ##
+# Give it a title
+tags$h3("Excel Sheets with Data"),
 
+# Spit out a table of selected options in the checkboxes
+tableOutput(outputId = "chosen"),
 
+# Explain the output
+tags$h5("You collected data in the following sheets.
+        Sheets not in this table",
+        tags$strong("will not"), 
+        "be uploaded."),
+
+# End with a horizontal line
+tags$hr(),
 
 ## ------------------------------ ##
           # File Input ####
