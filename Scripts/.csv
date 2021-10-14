@@ -1,0 +1,22 @@
+"variable","datum","units","notes"
+"plantSpecies",NA,NA,"e.g., Plantago_major"
+"plantGenus",NA,NA,"e.g., Plantago"
+"plantFamily",NA,NA,NA
+"transectOriginLat",NA,"degrees","latitude in decimal degrees of the start of the transect (e.g., 0.27160)"
+"transectOriginLong",NA,"degrees","longitude in decimal degrees of the start of the transect (e.g., 91.05196)"
+"popDiameter1",NA,"meters","longest dimension delineating population"
+"popDiameter2",NA,"meters","perpendicular to diameter 1"
+"transectLength",NA,"meters","will be same as population diameter 1 in most cases"
+"transectHeading",NA,"degrees","compass direction of transect, standing at origin"
+"protocolFollowed",NA,"""primary"", ""reproductive"", etc.","HerbVar protocol(s) used. Put ""personal"" if non-HerbVar method was used"
+"protocolDeviations",NA,NA,"any changes you made to the HerbVar protocol(s) you listed"
+"damageEstimationMethod",NA,NA,"how you estimated damage (e.g., ""visual"", ""LeafByte"", etc.)"
+"quadratRadius",NA,"meters","default = copied from calculation on densityData sheet. Replace with your own if you used an arbitrary radius"
+"seasonBeginning",NA,"date","approximate beginning of the growing season for this plant species, could be estimated after the survey"
+"seasonEnd",NA,"date","approximate end of the growing season for this plant species, could be estimated after the survey"
+"speciesManagement",NA,"natural, managed, cultivated","is the species at this site completely natural, managed, or entirely cultivated"
+"habitatType",NA,NA,"description of habitat type"
+"observerNames",NA,"names","names of researchers doing observations separated by semicolons ( ; )"
+NA,NA,NA,NA
+NA,NA,NA,NA
+"NOTES TO DATA ENTERER:","(1) Gold cells cannot be edited. If you need to add columns there are editable columns to the right of the pre-set columns","(2) Some cells wil only accept numeric inputs. If you feel text is necessary in a given cell, please instead put that information in the ""notes"" column of the same row","(3) Please fill out the ""newColumns"" tab for any columns you add. Please also mirror the formatting of the ""dataDictionary"" tab (that format is easiest to harvest automatically)"
