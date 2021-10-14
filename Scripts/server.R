@@ -35,6 +35,15 @@ server <- function(input, output, session) {
                               rownames = F,
                               colnames = F,
                               align = 'c')
+
+   # Print the checkbox output to be able to see it better
+   output$chose_v2 <- renderPrint({input$data_collected})
+   output$chose_v3 <- renderPrint({
+     as.data.frame(as.matrix(
+       (str_split(string = input$data_collected, pattern = "\\s+"))
+       ))
+   })
+   
    
 ## ----------------------------------------------- ##
              # 'Upload Data' Button ####  
@@ -55,7 +64,7 @@ server <- function(input, output, session) {
          easyClose = TRUE,
          footer = NULL
        ))
-       # If they don't upload data print the message:
+       # Message when push upload button without attaching a data file
        my_text('Please attach a file')
      }
      else
@@ -68,15 +77,41 @@ server <- function(input, output, session) {
          return(NULL)
        }
        
-       # If a file is actually uploaded, read it in!
-       data_file <- as.data.frame(
-         read_excel(upload$datapath,
-                    sheet = "siteData",
-                    col_types = 'text'
+       # Make an empty list to receive the data
+       all_data <- NULL
+       
+       # Get a more maleable list of selected checkboxes
+       picked_sheets <- as.data.frame(as.matrix(
+         (str_split(string = input$data_collected, pattern = "\\s+"))
          ))
        
+       # If a file is uploaded
+       # Put all sheets that are checked in the checkboxes in a list
+       for (i in picked_sheets){
+        # PROBLEM IS HERE ####
+         
+         # input$data_collected is not a vector, it is a single thing
+         # somehow need to split the "entries" apart
+         # so that they can be treated as a list
+         
+         all_data[[i]] <- as.data.frame(readxl::read_xlsx(
+           path = upload$datapath, 
+           sheet = all_data[[i]]
+         ))
+       }
+       
+       # THIS (BELOW) WORKS FOR ONE SHEET AT A TIME
+       
+       # If a file is actually uploaded, read it in!
+      # data_file <- as.data.frame(
+      #   read_excel(upload$datapath,
+      #              sheet = input$data_collected,
+      #              col_types = 'text'
+      #   ))
+       
        # Set the reactive value called fileData to the file inputs
-       fileData(data_file) 
+       #fileData(data_file) 
+       fileData(all_data)
        
        # Gather the name the users entered in the UI
        surveyID <- paste(input$pi_name,
@@ -88,10 +123,19 @@ server <- function(input, output, session) {
                             sep = '_')
        
        # Writing out the same file - but under a different name:
-       write.csv(x = data_file,
-                 file = paste(surveyID, ".csv"),
-                 row.names = F)
-       my_text('Data uploaded. Thank you!')
+    #   write.csv(x = data_file,
+    #             file = paste(surveyID, ".csv"),
+    #             row.names = F)
+       for (i in 1:length(input$data_collected)) {
+         write.csv(x = all_data[[i]],
+                   file = paste0(surveyID, "_",
+                                 names(all_data)[i],
+                                 ".csv"),
+                   row.names = F)
+       }
+       
+       # Successful upload message
+        my_text('Data uploaded. Thank you!')
      }
    })
    
