@@ -8,6 +8,10 @@
   ## Similarly, this code does operations that the app will eventually do
   ## But in a context where the added complication of Shiny is avoided
 
+# Required libraries
+library(tidyverse); library(stringr); library(readxl)
+library(purrr); library(stringr)
+
 # Clear environment
 rm(list = setdiff(ls(), c('myWD')))
 
@@ -21,14 +25,29 @@ setwd(paste0(myWD, "/Test Data"))
 getwd()
 
 ## ----------------------------------------------- ##
+  # Splitting a Vector w/o Special Characters ####
+## ----------------------------------------------- ##
+# Make a bad vector
+badVec <- c("siteData   reproData plantData")
+badVec
+
+# Try to split it with str_split
+str_split(string = badVec, pattern = "\\s+")
+
+# Make that not a list?
+as.data.frame(x = str_split(string = badVec, pattern = "\\s+"))
+
+# Call that as an object
+hacked <- as.data.frame(str_split(string = badVec, pattern = "\\s+"))
+names(hacked) <- "elements"
+hacked
+
+## ----------------------------------------------- ##
        # Reading in Multiple Excel Sheets ####
 ## ----------------------------------------------- ##
 # The Shiny App will want to read in several Excel sheets
 # BUT we *do not* want to read them in one-by-one
 # So, we want to supply a vector and read in all of the sheets at once
-
-# Required libraries
-library(tidyverse); library(stringr); library(readxl); library(purrr)
 
 # Read in the data
 #siteData <- as.data.frame(
