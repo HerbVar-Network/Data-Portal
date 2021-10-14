@@ -113,15 +113,15 @@ tags$hr(),
     placeholder = "Site 1"
   ),
 
+  # Note on site name
+  tags$h5("Note: site name will be capped at 8 characters automatically"),
+
     ## Sampling date
   ### Gets around possible issue of Name_Species_Site not being unique / survey
   dateInput(inputId = "date",
             label = "Sampling Date (if sampling took >1 day, enter first day)",
             min = "2000-01-01",
-            format = 'yyyy-mm-dd'),
-  
-  # Note on site name
-  tags$h5("Note: site name will be capped at 8 characters automatically")
+            format = 'yyyy-mm-dd')
 
 ## ----------------------------------------------- ##
             # Main Panel Contents ####
@@ -159,6 +159,8 @@ tags$h3("Excel Sheets with Data"),
 
 # Spit out a table of selected options in the checkboxes
 tableOutput(outputId = "chosen"),
+verbatimTextOutput(outputId = 'chose_v2'),
+verbatimTextOutput(outputId = 'chose_v3'),
 
 # Explain the output
 tags$h5("You collected data in the following sheets.
@@ -178,7 +180,7 @@ fileInput(inputId = "file_upload",
           accept = ".xlsx"),
 
 ## ------------------------------ ##
-       # Reactive Button ####
+       # Upload Button ####
 ## ------------------------------ ##
 ## Button does nothing (for now, will update)
 actionButton(inputId = "upload_button",
