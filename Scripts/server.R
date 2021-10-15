@@ -44,9 +44,8 @@ server <- function(input, output, session) {
        ))
    })
    
-   
 ## ----------------------------------------------- ##
-             # 'Upload Data' Button ####  
+              # 'Upload Data' Button ####  
 ## ----------------------------------------------- ##
 # Handling the "upload_button"
    observeEvent(input$upload_button, {
@@ -59,9 +58,9 @@ server <- function(input, output, session) {
      {
        # Generates pop-up warning
        showModal(modalDialog(
-         title = "Error",
+         title = "Error: Missing Data",
          paste0("No file selected to upload."),
-         easyClose = TRUE,
+         easyClose = T,
          footer = NULL
        ))
        # Message when push upload button without attaching a data file
@@ -69,7 +68,7 @@ server <- function(input, output, session) {
      }
      else
      {
-       # Get the file from the app
+       # If there is a file, retrieve it
        upload <- input$file_upload
        
        # If the file is NULL, return NULL
@@ -77,41 +76,15 @@ server <- function(input, output, session) {
          return(NULL)
        }
        
-       # Make an empty list to receive the data
-       all_data <- NULL
-       
-       # Get a more maleable list of selected checkboxes
-       picked_sheets <- as.data.frame(as.matrix(
-         (str_split(string = input$data_collected, pattern = "\\s+"))
-         ))
-       
-       # If a file is uploaded
-       # Put all sheets that are checked in the checkboxes in a list
-       for (i in picked_sheets){
-        # PROBLEM IS HERE ####
-         
-         # input$data_collected is not a vector, it is a single thing
-         # somehow need to split the "entries" apart
-         # so that they can be treated as a list
-         
-         all_data[[i]] <- as.data.frame(readxl::read_xlsx(
-           path = upload$datapath, 
-           sheet = all_data[[i]]
-         ))
-       }
-       
-       # THIS (BELOW) WORKS FOR ONE SHEET AT A TIME
-       
        # If a file is actually uploaded, read it in!
-      # data_file <- as.data.frame(
-      #   read_excel(upload$datapath,
-      #              sheet = input$data_collected,
-      #              col_types = 'text'
-      #   ))
+       data_file <- as.data.frame(
+         read_excel(upload$datapath,
+                    sheet = input$data_collected,
+                    col_types = 'text'
+        ))
        
        # Set the reactive value called fileData to the file inputs
-       #fileData(data_file) 
-       fileData(all_data)
+       fileData(data_file)
        
        # Gather the name the users entered in the UI
        surveyID <- paste(input$pi_name,
@@ -123,16 +96,11 @@ server <- function(input, output, session) {
                             sep = '_')
        
        # Writing out the same file - but under a different name:
-    #   write.csv(x = data_file,
-    #             file = paste(surveyID, ".csv"),
-    #             row.names = F)
-       for (i in 1:length(input$data_collected)) {
-         write.csv(x = all_data[[i]],
-                   file = paste0(surveyID, "_",
-                                 names(all_data)[i],
-                                 ".csv"),
-                   row.names = F)
-       }
+       write.csv(x = data_file,
+                 file = paste0(surveyID, "_",
+                               input$data_collected,
+                               ".csv"),
+                 row.names = F)
        
        # Successful upload message
         my_text('Data uploaded. Thank you!')
