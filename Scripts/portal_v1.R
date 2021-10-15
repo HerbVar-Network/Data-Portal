@@ -6,6 +6,7 @@ rm(list = ls())
 
 # Call any needed libraries
 library(shiny); library(stringr); library(readxl)
+library(googlesheets4); library(googledrive)
 
 ## --------------------------------------------------------------------- ##
                           # User Interface (UI) ####
@@ -20,11 +21,14 @@ ui.v1 <- fluidPage(
 tags$h2("HerbVar Data Submission Portal - Phase 2"),
   ## For more info on tags object & HTML shortcuts:
   ## https://shiny.rstudio.com/articles/tag-glossary.html
-  
+
 # Add information about the purpose of this portal
 tags$h4("This Shiny App handles data submission for the Herbivory Variability Network.
         More information can be found",
         tags$a(href = "http://herbvar.org/", "on the Network's website.")),
+
+# Add a line separating this from above
+tags$hr(),
 
 # Remind users they must use the template datafile
 tags$h4("You", tags$strong("must"),
@@ -162,7 +166,29 @@ tags$hr(),
 fileInput(inputId = "file_upload",
           label = tags$h3("Attach Excel File Here"),
           accept = ".xlsx"),
-        
+
+# Add a horizontal line
+tags$hr(),
+
+## ------------------------------ ##
+    # UI: Authorized Email ####
+## ------------------------------ ##
+# Note on email
+tags$h5("This app uploads your data to GoogleDrive.
+        Because of this,",
+        tags$strong("you need to enter an email with access to",
+                    tags$a(href = "https://drive.google.com/drive/folders/1YiQqcrQwlbDyxghVdQwxbTDv919oBuSY?usp=sharing",
+                           "this GoogleDrive folder"))),
+
+# Request email
+textInput(
+  inputId = "auth_email",
+  label = tags$h4("GoogleDrive-Authorized Email"),
+  placeholder = "me@gmail.com"
+),
+
+# Add a horizontal line
+tags$hr(),
 ## ------------------------------ ##
       # UI: Upload Button ####
 ## ------------------------------ ##
@@ -257,13 +283,30 @@ surveyID <- paste(input$pi_name,
                   str_sub(input$site, start = 1, end = 8),
                   input$date,
                   sep = '_')
-      
+
+# Pre-emptively solve an issue with an HTTP2 error
+httr::set_config(httr::config(http_version = 0))
+
+# Authorize GoogleDrive and GoogleSheets with the provided email
+googledrive::drive_auth(email = input$auth_email)
+gs4_auth(email = input$auth_email)
+
+# Upload data as a googlesheet
+gs4_create(name = paste0(surveyID, "_",
+                         input$data_collected),
+           sheets = data_file)
+
+# Move this to the correct folder
+drive_mv(file = paste0(surveyID, "_",
+                       input$data_collected),
+         path = "HerbVar Phase II Data - All Uploads/App Test Area/")
+
 # Writing out the same file - but under a different name:
-write.csv(x = data_file,
-          file = paste0(surveyID, "_",
-                        input$data_collected,
-                        ".csv"),
-          row.names = F)
+#write.csv(x = data_file,
+#          file = paste0(surveyID, "_",
+#                        input$data_collected,
+#                        ".csv"),
+#          row.names = F)
       
 # Successful upload message
 my_text('Data uploaded. Thank you!')
