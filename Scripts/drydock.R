@@ -42,6 +42,15 @@ hacked <- as.data.frame(str_split(string = badVec, pattern = "\\s+"))
 names(hacked) <- "elements"
 hacked
 
+# What if we make it a matrix first?
+as.data.frame(as.matrix(str_split(string = badVec, pattern = "\\s+")))
+as.data.frame(str_split(string = badVec, pattern = "\\s+"))
+
+# What does a for loop on the dataframe version do?
+for (i in 1:nrow(hacked)){
+  print(hacked[i, ])
+}
+
 ## ----------------------------------------------- ##
        # Reading in Multiple Excel Sheets ####
 ## ----------------------------------------------- ##
