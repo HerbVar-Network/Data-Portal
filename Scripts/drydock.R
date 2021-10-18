@@ -60,7 +60,7 @@ for (i in 1:nrow(hacked)){
 
 # Read in the data
 #siteData <- as.data.frame(
-#  read_excel(path = "shiny-test.xlsx",
+#  read_excel(path = "Shiny Test Data.xlsx",
 #             sheet = "siteData",
 #             col_types = 'text')
 #  )
@@ -78,7 +78,7 @@ wants <- c("siteData", "reproData", "plantData")
 #  purrr::map(function(sheet){ 
 #    assign(x = sheet,
 #           value = as.data.frame(
-#             readxl::read_xlsx(path = "Test Data/shiny-test.xlsx",
+#             readxl::read_xlsx(path = "Test Data/Shiny Test Data.xlsx",
 #                               sheet = sheet)),
 #           envir = .GlobalEnv)
 #    })
@@ -88,62 +88,58 @@ file_list <- wants %>%
   purrr::map(.f = function(sheet){ 
   assign(x = sheet,
          value = as.data.frame(
-           readxl::read_xlsx(path = "shiny-test.xlsx",
+           readxl::read_xlsx(path = "Shiny Test Data.xlsx",
                              sheet = sheet)))
   }) %>%
   setNames(wants)
 
 # Look at what that yields
-file_list
+str(file_list)
 
 # Option 3: List elements using a for loop
   ## Make empty list
-data_list <- NULL
+data_list <- list()
 
-  ## Loop the data into that empty list
-for (i in wants){
-  data_list[[i]] <- as.data.frame(readxl::read_xlsx(
-    path = "shiny-test.xlsx",
-    sheet = data_list[[i]]
-    ))
+  ## For loop to import data
+for (i in 1:length(wants)) {
+    # Import
+  data_list[[i]] <- as.data.frame(
+    readxl::read_xlsx(path = "Shiny Test Data.xlsx",
+                      sheet = wants[i]))
+  
+  # Name element after contents
+  names(data_list)[i] <- wants[i]
 }
 
   ## Look at what we're left with
-data_list
-
-# Different levels of brackets
-for (i in 1:length(data_list)) {
-  print(data_list[[i]])
-}
+str(data_list)
 
 ## ----------------------------------------------- ##
     # For Loops & Operations within a List ####
 ## ----------------------------------------------- ##
 # For each element of a list, we want to do some operation
-for (item in file_list) {
+for (item in data_list) {
   print(item)
+  print('end of loop')
 }
 
 # Return the name for each element in the list
-for (name in names(file_list)) {
+for (name in names(data_list)) {
   print(name)
 }
 
 # Is "name" interchangeable with "item"?
   ## No
-for (item in names(file_list)) {
+for (item in names(data_list)) {
   print(name)
 }
 
 # What if we want to save each item in the list by its name?
-for (i in 1:length(file_list)) {
-  write.csv(x = file_list[[i]],
+for (i in 1:length(data_list)) {
+  write.csv(x = data_list[[i]],
             file = paste0(names(file_list)[i], ".csv"),
             row.names = F)
 }
-
-
-
 
 # END ####
 
