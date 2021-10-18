@@ -263,21 +263,22 @@ output$chosen <- renderTable(expr = input$data_collected,
   ## Note these outputs are to help me diagnose issues in the app
   ## they will not be included in the final app
 output$chose_v2 <- renderPrint({input$data_collected})
-output$chose_v3 <- renderPrint({
-  as.data.frame(as.matrix(
-    (str_split(string = input$data_collected, pattern = "\\s+"))
-  ))
-})
 
 # Get an object of the selected checkboxes
 chosen_tabs <- reactive({as.data.frame(as.matrix(
   (str_split(string = input$data_collected, pattern = "\\s+"))))})
 
 # See if that works as intended
-output$chose_v4 <- renderPrint({
+output$chose_v3 <- renderPrint({
   chosen_tabs()
   })
-# chose_v4 == chose_v3
+
+# Test how bracket notation affects the reactive
+output$chose_v4 <- renderPrint({
+  for (i in 1:nrow(chosen_tabs())) {
+    print(as.character(chosen_tabs()[i, ]))
+  }
+})
 
 ## ----------------------------------------------- ##
           # S: 'Upload Data' Button ####  
@@ -335,18 +336,53 @@ gs4_auth(email = input$auth_email)
 #  ))
 
 # Set the reactive value called fileData to the file inputs
-fileData(data_file)
+#fileData(data_file)
+
+## -------------------- ##
+# For Loop Sheet Read/Save Test Area ####
+## -------------------- ##
+# Create an empty list
+data_files <- list()
+
+# Example loop that yields the correct sheet names one by one
+#for (i in 1:nrow(chosen_tabs())) {
+#  print(as.character(chosen_tabs()[i, ]))
+#}
+
+# Loop that:
+for (i in 1:nrow(chosen_tabs())) {
+  # Imports data into list
+  data_files[[i]] <- as.data.frame(
+    readxl::read_xlsx(path = upload$datapath,
+                      sheet = as.character(chosen_tabs()[i, ])))
+  
+  # Names elements after contents
+  names(data_files)[i] <- chosen_tabs()[i, ]
+}
+
+# Set reactive value
+fileData(data_files)
+
+# Second loop to save out of that list
+for (i in 1:length(data_files)) {
+  write.csv(x = data_files[[i]],
+            file = paste0(
+              surveyID, "_",
+              names(data_files)[i],
+              ".csv"),
+            row.names = F)
+}
 
 
-
-
-
+## -------------------- ##
+# Test Area END ####
+## -------------------- ##
 # Writing out the same file - but under a different name:
-write.csv(x = data_file,
-          file = paste0(surveyID, "_",
-                        input$data_collected,
-                        ".csv"),
-          row.names = F)
+#write.csv(x = data_file,
+#          file = paste0(surveyID, "_",
+#                        input$data_collected,
+#                        ".csv"),
+#          row.names = F)
 
 # To test the app we want to just save locally
   ## So the 'write googlesheet' steps are retained but commented out
