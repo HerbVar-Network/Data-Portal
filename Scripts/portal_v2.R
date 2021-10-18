@@ -351,7 +351,11 @@ for (i in 1:nrow(chosen_tabs())) {
 # Set reactive value
 fileData(data_files)
 
-# Second loop to save out of that list
+## ------------------------------ ##
+  # S: Save all Checked Sheets ####
+## ------------------------------ ##
+# Loop to save out of list of data
+  # LOCAL VERSION
 for (i in 1:length(data_files)) {
   write.csv(x = data_files[[i]],
             file = paste0(
@@ -361,33 +365,21 @@ for (i in 1:length(data_files)) {
             row.names = F)
 }
 
+# Second loop to save out of that list
+  # GOOGLEDRIVE VERSION
+for (i in 1:length(data_files)) {
+  # Create a GoogleSheet of each datafile
+  gs4_create(name = paste0(surveyID, "_",
+                           names(data_files)[i]),
+             sheets = data_files[i])
+  
+  # Move each one to the pre-specified correct folder
+  drive_mv(file = paste0(surveyID, "_",
+                         names(data_files)[i]),
+           path = "HerbVar Phase II Data - All Uploads/App Test Area/")
+  
+}
 
-## -------------------- ##
-# Test Area END ####
-## -------------------- ##
-# Writing out the same file - but under a different name:
-#write.csv(x = data_file,
-#          file = paste0(surveyID, "_",
-#                        input$data_collected,
-#                        ".csv"),
-#          row.names = F)
-
-# To test the app we want to just save locally
-  ## So the 'write googlesheet' steps are retained but commented out
-# REMEMBER TO UNCOMMENT THEM WHEN THIS IS FUNCTIONAL ####
-
-# Upload data as a googlesheet
-#gs4_create(name = paste0(surveyID, "_",
-#                         input$data_collected),
-#           sheets = data_file)
-
-# Move this to the correct folder
-#drive_mv(file = paste0(surveyID, "_",
-#                       input$data_collected),
-#         path = "HerbVar Phase II Data - All Uploads/App Test Area/")
-
-
-      
 # Successful upload message
 my_text('Data uploaded. Thank you!')
 }
