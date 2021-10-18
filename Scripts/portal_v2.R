@@ -1,6 +1,10 @@
 ## --------------------------------------------------------------------- ##
-              # HerbVar Data Submission Portal - Version 1
+              # HerbVar Data Submission Portal - Version 2
 ## --------------------------------------------------------------------- ##
+# Structure:
+  ## Provides checkboxes of all possible sheets and uploads all selected
+  ## Note it does not show the user what the data look like or do QA/QC
+
 # Clear environment
 rm(list = ls())
 

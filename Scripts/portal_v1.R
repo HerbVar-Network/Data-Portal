@@ -1,6 +1,10 @@
 ## --------------------------------------------------------------------- ##
               # HerbVar Data Submission Portal - Version 1
 ## --------------------------------------------------------------------- ##
+# Structure:
+  ## Provides a drop down menu for users to pick which sheet to upload
+  ## Note that it only works for one sheet at a time
+
 # Clear environment
 rm(list = ls())
 

@@ -1,6 +1,10 @@
 ## --------------------------------------------------------------------- ##
-              # HerbVar Data Submission Portal - Version 1
+              # HerbVar Data Submission Portal - Version 3
 ## --------------------------------------------------------------------- ##
+# Structure:
+  ## Retains the checkbox structure first instantiated in version 2
+  ## Also renders data tables for the user to see their data during the upload
+
 # Clear environment
 rm(list = ls())
 
