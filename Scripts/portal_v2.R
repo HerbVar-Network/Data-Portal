@@ -159,7 +159,7 @@ tags$h5("Note: only checked tabs will be uploaded"),
 tags$hr(),
 
 ## ------------------------------ ##
-  # Sheets to Upload Preview ####
+    # UI: Selection Preview ####
 ## ------------------------------ ##
 # Give it a title
 tags$h3("Excel Sheets with Data"),
@@ -168,6 +168,7 @@ tags$h3("Excel Sheets with Data"),
 tableOutput(outputId = "chosen"),
 verbatimTextOutput(outputId = 'chose_v2'),
 verbatimTextOutput(outputId = 'chose_v3'),
+verbatimTextOutput(outputId = 'chose_v4'),
 
 # Explain the output
 tags$h5("You collected data in the following sheets.
@@ -268,6 +269,16 @@ output$chose_v3 <- renderPrint({
   ))
 })
 
+# Get an object of the selected checkboxes
+chosen_tabs <- reactive({as.data.frame(as.matrix(
+  (str_split(string = input$data_collected, pattern = "\\s+"))))})
+
+# See if that works as intended
+output$chose_v4 <- renderPrint({
+  chosen_tabs()
+  })
+# chose_v4 == chose_v3
+
 ## ----------------------------------------------- ##
           # S: 'Upload Data' Button ####  
 ## ----------------------------------------------- ##
@@ -297,17 +308,7 @@ upload <- input$file_upload
       
 # If the file is NULL, return NULL
 if (is.null(upload)) { return(NULL) }
-      
-# If a file is actually uploaded, read it in!
-data_file <- as.data.frame(
-  read_excel(upload$datapath,
-             sheet = input$data_collected,
-             col_types = 'text'
-             ))
-      
-# Set the reactive value called fileData to the file inputs
-fileData(data_file)
-      
+
 # Gather the name the users entered in the UI
 surveyID <- paste(input$pi_name,
                   input$genus,
@@ -323,22 +324,45 @@ httr::set_config(httr::config(http_version = 0))
 googledrive::drive_auth(email = input$auth_email)
 gs4_auth(email = input$auth_email)
 
-# Upload data as a googlesheet
-gs4_create(name = paste0(surveyID, "_",
-                         input$data_collected),
-           sheets = data_file)
+# The path to reading a single pre-specified file is below
+  ## Commented out so I can work on a for loop version
 
-# Move this to the correct folder
-drive_mv(file = paste0(surveyID, "_",
-                       input$data_collected),
-         path = "HerbVar Phase II Data - All Uploads/App Test Area/")
+# If a file is actually uploaded, read it in!
+#data_file <- as.data.frame(
+#  read_excel(upload$datapath,
+#             sheet = input$data_collected,
+#             col_types = 'text'
+#  ))
+
+# Set the reactive value called fileData to the file inputs
+fileData(data_file)
+
+
+
+
 
 # Writing out the same file - but under a different name:
-#write.csv(x = data_file,
-#          file = paste0(surveyID, "_",
-#                        input$data_collected,
-#                        ".csv"),
-#          row.names = F)
+write.csv(x = data_file,
+          file = paste0(surveyID, "_",
+                        input$data_collected,
+                        ".csv"),
+          row.names = F)
+
+# To test the app we want to just save locally
+  ## So the 'write googlesheet' steps are retained but commented out
+# REMEMBER TO UNCOMMENT THEM WHEN THIS IS FUNCTIONAL ####
+
+# Upload data as a googlesheet
+#gs4_create(name = paste0(surveyID, "_",
+#                         input$data_collected),
+#           sheets = data_file)
+
+# Move this to the correct folder
+#drive_mv(file = paste0(surveyID, "_",
+#                       input$data_collected),
+#         path = "HerbVar Phase II Data - All Uploads/App Test Area/")
+
+
       
 # Successful upload message
 my_text('Data uploaded. Thank you!')
