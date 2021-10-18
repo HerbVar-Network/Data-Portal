@@ -70,7 +70,7 @@ tags$h5("Please", tags$strong("DO NOT"),
 textInput(
   inputId = "pi_name",
   label = tags$h4("Last Name of the PI"),
-  placeholder = "Darwin"
+  placeholder = "von Humboldt"
   ),
           
 ## Genus of survey species
