@@ -23,7 +23,7 @@ tags$h2("HerbVar Data Submission Portal - Phase 2"),
   ## https://shiny.rstudio.com/articles/tag-glossary.html
 
 # Add information about the purpose of this portal
-tags$h4("This Shiny App handles data submission for the Herbivory Variability Network.
+tags$h4("This R Shiny App handles data submission for the Herbivory Variability Network.
         More information can be found",
         tags$a(href = "http://herbvar.org/", "on the Network's website.")),
 
@@ -159,27 +159,6 @@ tags$h5("Note: only checked tabs will be uploaded"),
 tags$hr(),
 
 ## ------------------------------ ##
-    # UI: Selection Preview ####
-## ------------------------------ ##
-# Give it a title
-tags$h3("Excel Sheets with Data"),
-
-# Spit out a table of selected options in the checkboxes
-tableOutput(outputId = "chosen"),
-verbatimTextOutput(outputId = 'chose_v2'),
-verbatimTextOutput(outputId = 'chose_v3'),
-verbatimTextOutput(outputId = 'chose_v4'),
-
-# Explain the output
-tags$h5("You collected data in the following sheets.
-        Sheets not in this table",
-        tags$strong("will not"), 
-        "be uploaded."),
-
-# End with a horizontal line
-tags$hr(),
-
-## ------------------------------ ##
        # UI: File Input ####
 ## ------------------------------ ##
 # Provide a place for Excel file uploading
@@ -253,32 +232,9 @@ output$fileID <- renderPrint({
 ## ----------------------------------------------- ##
         # S: Collect Checkbox Choices ####
 ## ----------------------------------------------- ##
-# Make the chosen checkboxes a small table for the user to examine
-output$chosen <- renderTable(expr = input$data_collected,
-                             rownames = F,
-                             colnames = F,
-                             align = 'c')
-
-# Print the checkbox output to be able to see it better
-  ## Note these outputs are to help me diagnose issues in the app
-  ## they will not be included in the final app
-output$chose_v2 <- renderPrint({input$data_collected})
-
 # Get an object of the selected checkboxes
 chosen_tabs <- reactive({as.data.frame(as.matrix(
   (str_split(string = input$data_collected, pattern = "\\s+"))))})
-
-# See if that works as intended
-output$chose_v3 <- renderPrint({
-  chosen_tabs()
-  })
-
-# Test how bracket notation affects the reactive
-output$chose_v4 <- renderPrint({
-  for (i in 1:nrow(chosen_tabs())) {
-    print(as.character(chosen_tabs()[i, ]))
-  }
-})
 
 ## ----------------------------------------------- ##
            # S: 'Upload Data' Button ####  
@@ -356,14 +312,14 @@ fileData(data_files)
 ## ------------------------------ ##
 # Loop to save out of list of data
   # LOCAL VERSION
-for (i in 1:length(data_files)) {
-  write.csv(x = data_files[[i]],
-            file = paste0(
-              surveyID, "_",
-              names(data_files)[i],
-              ".csv"),
-            row.names = F)
-}
+#for (i in 1:length(data_files)) {
+#  write.csv(x = data_files[[i]],
+#            file = paste0(
+#              surveyID, "_",
+#              names(data_files)[i],
+#              ".csv"),
+#            row.names = F)
+#}
 
 # Second loop to save out of that list
   # GOOGLEDRIVE VERSION
