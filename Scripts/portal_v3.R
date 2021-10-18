@@ -281,14 +281,17 @@ output$chose_v4 <- renderPrint({
 })
 
 ## ----------------------------------------------- ##
-          # S: 'Upload Data' Button ####  
+           # S: 'Upload Data' Button ####  
 ## ----------------------------------------------- ##
 # If the button is clicked, do the stuff in the {} brackets
 observeEvent(input$upload_button, {
     
 # Need to make the code actually wait for the data
 req(input$file_upload)
-    
+
+## ------------------------------ ##
+  # S: Button Pushed w/o Data ####
+## ------------------------------ ##
 # If the upload button is clicked but no data are attached:
 if(is.null(input$file_upload))
   {
@@ -301,8 +304,11 @@ if(is.null(input$file_upload))
     ))
 # Message when push upload button without attaching a data file
   my_text('Please attach a file')
-  
-    } else {
+
+## ------------------------------ ##
+ # S: Button Pushed with Data ####
+## ------------------------------ ##
+  } else {    
 
 # If there is a file, retrieve it
 upload <- input$file_upload
@@ -325,45 +331,31 @@ httr::set_config(httr::config(http_version = 0))
 googledrive::drive_auth(email = input$auth_email)
 gs4_auth(email = input$auth_email)
 
-# The path to reading a single pre-specified file is below
-  ## Commented out so I can work on a for loop version
-
-# If a file is actually uploaded, read it in!
-#data_file <- as.data.frame(
-#  read_excel(upload$datapath,
-#             sheet = input$data_collected,
-#             col_types = 'text'
-#  ))
-
-# Set the reactive value called fileData to the file inputs
-#fileData(data_file)
-
-## -------------------- ##
-# For Loop Sheet Read/Save Test Area ####
-## -------------------- ##
+## ------------------------------ ##
+  # S: Get all Checked Sheets ####
+## ------------------------------ ##
 # Create an empty list
 data_files <- list()
 
-# Example loop that yields the correct sheet names one by one
-#for (i in 1:nrow(chosen_tabs())) {
-#  print(as.character(chosen_tabs()[i, ]))
-#}
-
-# Loop that:
+# Run a for loop that:
 for (i in 1:nrow(chosen_tabs())) {
-  # Imports data into list
+  # 1) Imports data into list
   data_files[[i]] <- as.data.frame(
     readxl::read_xlsx(path = upload$datapath,
                       sheet = as.character(chosen_tabs()[i, ])))
   
-  # Names elements after contents
+  # 2) Names elements after contents
   names(data_files)[i] <- chosen_tabs()[i, ]
 }
 
 # Set reactive value
 fileData(data_files)
 
-# Second loop to save out of that list
+## ------------------------------ ##
+  # S: Save all Checked Sheets ####
+## ------------------------------ ##
+# Loop to save out of list of data
+  # LOCAL VERSION
 for (i in 1:length(data_files)) {
   write.csv(x = data_files[[i]],
             file = paste0(
@@ -373,33 +365,21 @@ for (i in 1:length(data_files)) {
             row.names = F)
 }
 
+# Second loop to save out of that list
+  # GOOGLEDRIVE VERSION
+for (i in 1:length(data_files)) {
+  # Create a GoogleSheet of each datafile
+  gs4_create(name = paste0(surveyID, "_",
+                           names(data_files)[i]),
+             sheets = data_files[i])
+  
+  # Move each one to the pre-specified correct folder
+  drive_mv(file = paste0(surveyID, "_",
+                         names(data_files)[i]),
+           path = "HerbVar Phase II Data - All Uploads/App Test Area/")
+  
+}
 
-## -------------------- ##
-# Test Area END ####
-## -------------------- ##
-# Writing out the same file - but under a different name:
-#write.csv(x = data_file,
-#          file = paste0(surveyID, "_",
-#                        input$data_collected,
-#                        ".csv"),
-#          row.names = F)
-
-# To test the app we want to just save locally
-  ## So the 'write googlesheet' steps are retained but commented out
-# REMEMBER TO UNCOMMENT THEM WHEN THIS IS FUNCTIONAL ####
-
-# Upload data as a googlesheet
-#gs4_create(name = paste0(surveyID, "_",
-#                         input$data_collected),
-#           sheets = data_file)
-
-# Move this to the correct folder
-#drive_mv(file = paste0(surveyID, "_",
-#                       input$data_collected),
-#         path = "HerbVar Phase II Data - All Uploads/App Test Area/")
-
-
-      
 # Successful upload message
 my_text('Data uploaded. Thank you!')
 }
