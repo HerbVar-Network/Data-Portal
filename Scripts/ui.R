@@ -89,7 +89,7 @@ tags$hr(),
   textInput(
     inputId = "pi_name",
     label = "Last Name of the PI",
-    placeholder = "Darwin"
+    placeholder = "von Humboldt"
   ),
   
     ## Genus of survey species
