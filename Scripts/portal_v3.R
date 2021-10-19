@@ -10,18 +10,20 @@ rm(list = ls())
 
 # Call any needed libraries
 library(shiny); library(stringr); library(readxl)
-library(googlesheets4); library(googledrive)
+library(googlesheets4); library(googledrive); library(DT)
 
 ## --------------------------------------------------------------------- ##
                           # User Interface (UI) ####
 ## --------------------------------------------------------------------- ##
 # Define user interface object
 ui.v1 <- fluidPage(
-  
+
+# Add a title that appears in the browser tab
+title = "HerbVar Data Portal",
 ## ----------------------------------------------- ##
           # UI: Header (Above Layout) ####
 ## ----------------------------------------------- ##
-# Add an app title
+# Add an app title that can be read in the app
 tags$h2("HerbVar Data Submission Portal - Phase 2"),
   ## For more info on tags object & HTML shortcuts:
   ## https://shiny.rstudio.com/articles/tag-glossary.html
@@ -70,12 +72,19 @@ tags$h5("Please", tags$strong("DO NOT"),
         "use underscores ('_') in your entries"),
 
 # We need the following to uniquely name the file users submit:
-  ## PI name
+  ## PI last name
 textInput(
-  inputId = "pi_name",
+  inputId = "pi_last",
   label = tags$h4("Last Name of the PI"),
   placeholder = "von Humboldt"
   ),
+
+## PI first initial
+textInput(
+  inputId = "pi_first",
+  label = tags$h4("First Initial of the PI"),
+  placeholder = "A"
+),
           
 ## Genus of survey species
 textInput(
@@ -152,7 +161,7 @@ checkboxGroupInput(
   label = "Excel Tabs with Data",
   choices = c("siteData", "densityData", "plantData", "reproData",
               "herbivoreData", "newColumns", "notes"),
-  selected = c("siteData"),
+  selected = c("siteData", "plantData"),
   inline = T
 ),
 
@@ -163,28 +172,7 @@ tags$h5("Note: only checked tabs will be uploaded"),
 tags$hr(),
 
 ## ------------------------------ ##
-    # UI: Selection Preview ####
-## ------------------------------ ##
-# Give it a title
-tags$h3("Excel Sheets with Data"),
-
-# Spit out a table of selected options in the checkboxes
-tableOutput(outputId = "chosen"),
-verbatimTextOutput(outputId = 'chose_v2'),
-verbatimTextOutput(outputId = 'chose_v3'),
-verbatimTextOutput(outputId = 'chose_v4'),
-
-# Explain the output
-tags$h5("You collected data in the following sheets.
-        Sheets not in this table",
-        tags$strong("will not"), 
-        "be uploaded."),
-
-# End with a horizontal line
-tags$hr(),
-
-## ------------------------------ ##
-       # UI: File Input ####
+        # UI: File Input ####
 ## ------------------------------ ##
 # Provide a place for Excel file uploading
 fileInput(inputId = "file_upload",
@@ -195,12 +183,56 @@ fileInput(inputId = "file_upload",
 tags$hr(),
 
 ## ------------------------------ ##
+        # UI: Tab Panels ####
+## ------------------------------ ##
+# Give a title above this section
+tags$h3("Preview Data"),
+
+# Make tabs for each sheet of the data
+tabsetPanel(
+  id = "data_tabs",
+  tabPanel(title = "siteData", DT::dataTableOutput("site_out")),
+  tabPanel(title = "densityData", DT::dataTableOutput("dens_out")),
+  tabPanel(title = "plantData", DT::dataTableOutput("plant_out")),
+  tabPanel(title = "reproData", DT::dataTableOutput("repr_out")),
+  tabPanel(title = "herbivoreData", DT::dataTableOutput("bug_out")),
+  tabPanel(title = "newColumns", DT::dataTableOutput("new_out")),
+  tabPanel(title = "notes", DT::dataTableOutput("notes_out")),
+),
+
+# Below the tab, print the message about each tab (if it's not attached)
+#verbatimTextOutput("attach_msg"),
+
+# End with a horizontal line
+tags$hr(),
+
+## ------------------------------ ##
+    # UI: Test Outputs ####
+## ------------------------------ ##
+# Give it a title
+tags$h3("Test Outputs"),
+
+# Spit out a table of selected options in the checkboxes
+tableOutput(outputId = "test_out1"),
+verbatimTextOutput(outputId = 'test_out2'),
+verbatimTextOutput(outputId = 'test_out3'),
+verbatimTextOutput(outputId = 'test_out4'),
+
+# Explain the output
+tags$h5("This section is purely for diagnostic purposes;
+        As each portal version is created it is helpful to have spaces
+        to export inner workings for visualization"),
+
+# End with a horizontal line
+tags$hr(),
+
+## ------------------------------ ##
     # UI: Authorized Email ####
 ## ------------------------------ ##
 # Request email
 textInput(
   inputId = "auth_email",
-  label = tags$h4("GoogleDrive-Authorized Email"),
+  label = tags$h3("GoogleDrive-Authorized Email"),
   placeholder = "me@gmail.com"
 ),
 
@@ -213,6 +245,7 @@ tags$h5("This app uploads your data to GoogleDrive.
 
 # Add a horizontal line
 tags$hr(),
+
 ## ------------------------------ ##
       # UI: Upload Button ####
 ## ------------------------------ ##
@@ -221,7 +254,7 @@ actionButton(inputId = "upload_button",
              label = "Upload Attached Data"),
         
 # After clicking the button, return the message created in the server
-verbatimTextOutput("attach_message"),
+verbatimTextOutput("upload_msg"),
 
 # Add a line for some breathing room at the bottom
 tags$hr(),
@@ -246,7 +279,8 @@ server.v1 <- function(input, output, session) {
   ## Inside of a render*() function to update dynamically
 output$fileID <- renderPrint({
   paste(
-    input$pi_name,
+    input$pi_last,
+    input$pi_first,
     input$genus,
     input$sp,
     str_sub(input$site, start = 1, end = 8),
@@ -257,8 +291,15 @@ output$fileID <- renderPrint({
 ## ----------------------------------------------- ##
         # S: Collect Checkbox Choices ####
 ## ----------------------------------------------- ##
+# Get an object of the selected checkboxes
+chosen_tabs <- reactive({as.data.frame(as.matrix(
+  (str_split(string = input$data_collected, pattern = "\\s+"))))})
+
+## ----------------------------------------------- ##
+         # S: Test Outputs Creation ####
+## ----------------------------------------------- ##
 # Make the chosen checkboxes a small table for the user to examine
-output$chosen <- renderTable(expr = input$data_collected,
+output$test_out1 <- renderTable(expr = input$data_collected,
                              rownames = F,
                              colnames = F,
                              align = 'c')
@@ -266,23 +307,131 @@ output$chosen <- renderTable(expr = input$data_collected,
 # Print the checkbox output to be able to see it better
   ## Note these outputs are to help me diagnose issues in the app
   ## they will not be included in the final app
-output$chose_v2 <- renderPrint({input$data_collected})
+output$test_out2 <- renderPrint({input$data_collected})
 
-# Get an object of the selected checkboxes
-chosen_tabs <- reactive({as.data.frame(as.matrix(
-  (str_split(string = input$data_collected, pattern = "\\s+"))))})
 
 # See if that works as intended
-output$chose_v3 <- renderPrint({
+output$test_out3 <- renderPrint({
   chosen_tabs()
   })
 
 # Test how bracket notation affects the reactive
-output$chose_v4 <- renderPrint({
+output$test_out4 <- renderPrint({
   for (i in 1:nrow(chosen_tabs())) {
     print(as.character(chosen_tabs()[i, ]))
   }
 })
+
+## ----------------------------------------------- ##
+           # S: Create Tabs for Data ####  
+## ----------------------------------------------- ##
+# Make generic pseudo-error messages for the tabs when:
+  ## 1) The data haven't been attached
+attach_error <- data.frame("Alert" = c("No data detected",
+                                       "Have you attached your Excel file?"))
+  ## 2) The data were attached but a given sheet's box wasn't selected
+box_error <- data.frame("Alert" = c("Sheet not selected for upload",
+                                     "Check the box above if you want to upload"))
+# siteData tab
+output$site_out <- DT::renderDataTable({
+  # If no data are attached, return the attach error
+  if(is.null(input$file_upload)){
+    attach_error
+    } else {
+  # If they are attached but the sheet isn't selected in the chechboxes
+  if(nrow(filter(chosen_tabs(), V1 == "siteData")) == 0){
+    box_error
+    } else {
+  # If data are attached and checkbox is selected, preview the table
+  DT::datatable(data = as.data.frame(
+    readxl::read_xlsx(path = input$file_upload$datapath,
+                      sheet = "siteData")),
+    options = list(pageLength = 5),
+    rownames = F) }
+      }
+    })
+
+# densityData tab
+  ## Note, the following do the same thing as the siteData tab
+  ## So comments are excluded for brevity
+output$dens_out <- DT::renderDataTable({
+  if(is.null(input$file_upload)){ attach_error }
+  else { if(nrow(filter(chosen_tabs(), V1 == "densityData")) == 0){ box_error }
+    else {
+      DT::datatable(data = as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "densityData")),
+        options = list(pageLength = 5),
+        rownames = F) }
+  }
+})
+
+# plantData tab
+output$plant_out <- DT::renderDataTable({
+  if(is.null(input$file_upload)){ attach_error }
+  else { if(nrow(filter(chosen_tabs(), V1 == "plantData")) == 0){ box_error }
+    else {
+      DT::datatable(data = as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "plantData")),
+        options = list(pageLength = 5),
+        rownames = F) }
+  }
+})
+
+# reproData
+output$repr_out <- DT::renderDataTable({
+  if(is.null(input$file_upload)){ attach_error }
+  else { if(nrow(filter(chosen_tabs(), V1 == "reproData")) == 0){ box_error }
+    else {
+      DT::datatable(data = as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "reproData")),
+        options = list(pageLength = 5),
+        rownames = F) }
+  }
+})
+
+# herbivoreData
+output$bug_out <- DT::renderDataTable({
+  if(is.null(input$file_upload)){ attach_error }
+  else { if(nrow(filter(chosen_tabs(), V1 == "herbivoreData")) == 0){ box_error }
+    else {
+      DT::datatable(data = as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "herbivoreData")),
+        options = list(pageLength = 5),
+        rownames = F) }
+  }
+})
+
+
+# newColumns
+output$new_out <- DT::renderDataTable({
+  if(is.null(input$file_upload)){ attach_error }
+  else { if(nrow(filter(chosen_tabs(), V1 == "newColumns")) == 0){ box_error }
+    else {
+      DT::datatable(data = as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "newColumns")),
+        options = list(pageLength = 5),
+        rownames = F) }
+  }
+})
+
+# Notes tab
+output$notes_out <- DT::renderDataTable({
+  if(is.null(input$file_upload)){ attach_error }
+  else { if(nrow(filter(chosen_tabs(), V1 == "notes")) == 0){ box_error }
+    else {
+      DT::datatable(data = as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "notes")),
+        options = list(pageLength = 5),
+        rownames = F) }
+  }
+})
+
 
 ## ----------------------------------------------- ##
            # S: 'Upload Data' Button ####  
@@ -307,7 +456,7 @@ if(is.null(input$file_upload))
     footer = NULL
     ))
 # Message when push upload button without attaching a data file
-  my_text('Please attach a file')
+  upload_msg('Please attach a file')
 
 ## ------------------------------ ##
  # S: Button Pushed with Data ####
@@ -321,19 +470,13 @@ upload <- input$file_upload
 if (is.null(upload)) { return(NULL) }
 
 # Gather the name the users entered in the UI
-surveyID <- paste(input$pi_name,
+surveyID <- paste(input$pi_last,
+                  input$pi_first,
                   input$genus,
                   input$sp,
                   str_sub(input$site, start = 1, end = 8),
                   input$date,
                   sep = '_')
-
-# Pre-emptively solve an issue with an HTTP2 error
-httr::set_config(httr::config(http_version = 0))
-
-# Authorize GoogleDrive and GoogleSheets with the provided email
-googledrive::drive_auth(email = input$auth_email)
-gs4_auth(email = input$auth_email)
 
 ## ------------------------------ ##
   # S: Get all Checked Sheets ####
@@ -358,19 +501,14 @@ fileData(data_files)
 ## ------------------------------ ##
   # S: Save all Checked Sheets ####
 ## ------------------------------ ##
-# Loop to save out of list of data
-  # LOCAL VERSION
-for (i in 1:length(data_files)) {
-  write.csv(x = data_files[[i]],
-            file = paste0(
-              surveyID, "_",
-              names(data_files)[i],
-              ".csv"),
-            row.names = F)
-}
+# Pre-emptively solve an issue with an HTTP2 error
+httr::set_config(httr::config(http_version = 0))
 
-# Second loop to save out of that list
-  # GOOGLEDRIVE VERSION
+# Authorize GoogleDrive and GoogleSheets with the provided email
+googledrive::drive_auth(email = input$auth_email)
+gs4_auth(email = input$auth_email)
+
+# Loop to save the data from the list
 for (i in 1:length(data_files)) {
   # Create a GoogleSheet of each datafile
   gs4_create(name = paste0(surveyID, "_",
@@ -385,17 +523,18 @@ for (i in 1:length(data_files)) {
 }
 
 # Successful upload message
-my_text('Data uploaded. Thank you!')
+upload_msg('Data uploaded. Thank you!')
 }
   })
   
-# Call final fileData and my_text information
+# Call any remaining reactive values
 fileData <- reactiveVal()
-my_text <- reactiveVal()
+upload_msg <- reactiveVal()
   
-# Produce a message following the button press
-output$attach_message <- renderText({my_text()})
-  
+# Produce any needed messages
+output$upload_msg <- renderText({upload_msg()})
+output$attach_msg <- renderText({attach_text1()})
+
 ## ----------------------------------------------- ##
         # S: Close Server Parentheses ####
 ## ----------------------------------------------- ##
