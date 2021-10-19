@@ -16,7 +16,7 @@ library(googlesheets4); library(googledrive)
                           # User Interface (UI) ####
 ## --------------------------------------------------------------------- ##
 # Define user interface object
-ui.v1 <- fluidPage(
+ui.v2 <- fluidPage(
   
 ## ----------------------------------------------- ##
           # UI: Header (Above Layout) ####
@@ -216,7 +216,7 @@ tags$hr(),
                       # Server Function (S) ####
 ## --------------------------------------------------------------------- ##
 # Create the internal mechanism(s) of the app
-server.v1 <- function(input, output, session) {
+server.v2 <- function(input, output, session) {
 
 ## ----------------------------------------------- ##
              # S: File Name Output ####  
@@ -362,7 +362,7 @@ output$attach_message <- renderText({my_text()})
 ## --------------------------------------------------------------------- ##
                               # Build App ####
 ## --------------------------------------------------------------------- ##
-shinyApp(ui = ui.v1, server = server.v1)
+shinyApp(ui = ui.v2, server = server.v2)
 
 # END ####
 
