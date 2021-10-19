@@ -3,7 +3,7 @@
 ## --------------------------------------------------------------------- ##
 # Structure:
   ## Retains the checkbox structure first instantiated in version 2
-  ## Also renders data tables for the user to see their data during the upload
+  ## Also renders data tables for the user to see their data prior to upload
 
 # Clear environment
 rm(list = ls())
@@ -16,7 +16,7 @@ library(googlesheets4); library(googledrive); library(DT)
                           # User Interface (UI) ####
 ## --------------------------------------------------------------------- ##
 # Define user interface object
-ui.v1 <- fluidPage(
+ui.v3 <- fluidPage(
 
 # Add a title that appears in the browser tab
 title = "HerbVar Data Portal",
@@ -118,7 +118,7 @@ dateInput(inputId = "date",
           format = 'yyyy-mm-dd'),
 
 # Note on date
-tags$h5("Note: if sampling took >1 day, pick first day")
+tags$h5("Note: if sampling took >1 day, select the first day")
 
 ## ----------------------------------------------- ##
            # UI: Main Panel Contents ####
@@ -183,7 +183,7 @@ fileInput(inputId = "file_upload",
 tags$hr(),
 
 ## ------------------------------ ##
-        # UI: Tab Panels ####
+    # UI: Data Preview Tabs ####
 ## ------------------------------ ##
 # Give a title above this section
 tags$h3("Preview Data"),
@@ -199,29 +199,6 @@ tabsetPanel(
   tabPanel(title = "newColumns", DT::dataTableOutput("new_out")),
   tabPanel(title = "notes", DT::dataTableOutput("notes_out")),
 ),
-
-# Below the tab, print the message about each tab (if it's not attached)
-#verbatimTextOutput("attach_msg"),
-
-# End with a horizontal line
-tags$hr(),
-
-## ------------------------------ ##
-    # UI: Test Outputs ####
-## ------------------------------ ##
-# Give it a title
-tags$h3("Test Outputs"),
-
-# Spit out a table of selected options in the checkboxes
-tableOutput(outputId = "test_out1"),
-verbatimTextOutput(outputId = 'test_out2'),
-verbatimTextOutput(outputId = 'test_out3'),
-verbatimTextOutput(outputId = 'test_out4'),
-
-# Explain the output
-tags$h5("This section is purely for diagnostic purposes;
-        As each portal version is created it is helpful to have spaces
-        to export inner workings for visualization"),
 
 # End with a horizontal line
 tags$hr(),
@@ -270,7 +247,7 @@ tags$hr(),
                       # Server Function (S) ####
 ## --------------------------------------------------------------------- ##
 # Create the internal mechanism(s) of the app
-server.v1 <- function(input, output, session) {
+server.v3 <- function(input, output, session) {
 
 ## ----------------------------------------------- ##
              # S: File Name Output ####  
@@ -296,34 +273,7 @@ chosen_tabs <- reactive({as.data.frame(as.matrix(
   (str_split(string = input$data_collected, pattern = "\\s+"))))})
 
 ## ----------------------------------------------- ##
-         # S: Test Outputs Creation ####
-## ----------------------------------------------- ##
-# Make the chosen checkboxes a small table for the user to examine
-output$test_out1 <- renderTable(expr = input$data_collected,
-                             rownames = F,
-                             colnames = F,
-                             align = 'c')
-
-# Print the checkbox output to be able to see it better
-  ## Note these outputs are to help me diagnose issues in the app
-  ## they will not be included in the final app
-output$test_out2 <- renderPrint({input$data_collected})
-
-
-# See if that works as intended
-output$test_out3 <- renderPrint({
-  chosen_tabs()
-  })
-
-# Test how bracket notation affects the reactive
-output$test_out4 <- renderPrint({
-  for (i in 1:nrow(chosen_tabs())) {
-    print(as.character(chosen_tabs()[i, ]))
-  }
-})
-
-## ----------------------------------------------- ##
-           # S: Create Tabs for Data ####  
+           # S: Create Preview Tabs ####  
 ## ----------------------------------------------- ##
 # Make generic pseudo-error messages for the tabs when:
   ## 1) The data haven't been attached
@@ -431,7 +381,6 @@ output$notes_out <- DT::renderDataTable({
         rownames = F) }
   }
 })
-
 
 ## ----------------------------------------------- ##
            # S: 'Upload Data' Button ####  
@@ -545,7 +494,7 @@ output$attach_msg <- renderText({attach_text1()})
 ## --------------------------------------------------------------------- ##
                               # Build App ####
 ## --------------------------------------------------------------------- ##
-shinyApp(ui = ui.v1, server = server.v1)
+shinyApp(ui = ui.v3, server = server.v3)
 
 # END ####
 
