@@ -1,9 +1,10 @@
 ## --------------------------------------------------------------------- ##
-              # HerbVar Data Submission Portal - Version 3
+              # HerbVar Data Submission Portal - Version 4
 ## --------------------------------------------------------------------- ##
 # Structure:
   ## Retains the checkbox structure first instantiated in version 2
   ## Also renders data tables for the user to see their data during the upload
+  ## Also performs some preliminary QA/QC for some of the data tabs
 
 # Clear environment
 rm(list = ls())
@@ -16,7 +17,7 @@ library(googlesheets4); library(googledrive); library(DT)
                           # User Interface (UI) ####
 ## --------------------------------------------------------------------- ##
 # Define user interface object
-ui.v1 <- fluidPage(
+ui.v4 <- fluidPage(
 
 # Add a title that appears in the browser tab
 title = "HerbVar Data Portal",
@@ -270,7 +271,7 @@ tags$hr(),
                       # Server Function (S) ####
 ## --------------------------------------------------------------------- ##
 # Create the internal mechanism(s) of the app
-server.v1 <- function(input, output, session) {
+server.v4 <- function(input, output, session) {
 
 ## ----------------------------------------------- ##
              # S: File Name Output ####  
@@ -545,7 +546,7 @@ output$attach_msg <- renderText({attach_text1()})
 ## --------------------------------------------------------------------- ##
                               # Build App ####
 ## --------------------------------------------------------------------- ##
-shinyApp(ui = ui.v1, server = server.v1)
+shinyApp(ui = ui.v4, server = server.v4)
 
 # END ####
 
