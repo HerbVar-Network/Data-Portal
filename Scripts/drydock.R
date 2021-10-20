@@ -11,6 +11,7 @@
 # Required libraries
 library(tidyverse); library(stringr); library(readxl)
 library(purrr); library(stringr)
+library(googlesheets4); library(googledrive)
 
 # Clear environment
 rm(list = setdiff(ls(), c('myWD')))
@@ -140,6 +141,44 @@ for (i in 1:length(data_list)) {
             file = paste0(names(file_list)[i], ".csv"),
             row.names = F)
 }
+
+## ----------------------------------------------- ##
+    # Adding Rows to Existing GoogleSheets ####
+## ----------------------------------------------- ##
+# Pre-emptively solve an issue with an HTTP2 error
+httr::set_config(httr::config(http_version = 0))
+
+# Authorize GoogleDrive and GoogleSheets
+googledrive::drive_auth(email = "herbvar@gmail.com")
+gs4_auth(email = "herbvar@gmail.com")
+
+# Identify a googlesheet I made to test this exact thing
+TestFileID <- drive_get(path = "Test Data - Phase 2", corpus = 'allDrives')
+
+# Add a row to that datasheet
+  ## Without specifying columns
+sheet_append(ss = TestFileID$id,
+             data = data.frame(c("x", "y", "z")),
+             sheet = "Completed Surveys")
+
+# What if we created a dataframe with correctly named columns
+gg_test_df = data.frame("fileName" = 'x',
+                        "PI_lastName"	= 'x',
+                        "PI_firstName" = 'x',
+                        "plantGenus" = 'x',
+                        "plantSpecies" = 'x')
+gg_test_df
+
+# And get a GoogleSheet with those columns
+CSfileID <- drive_get(path = "Phase 2 Completed Surveys - Primary",
+                      corpus = 'allDrives')
+
+# Add a row to that datasheet
+## Without specifying columns
+sheet_append(ss = CSfileID$id,
+             data = gg_test_df,
+             sheet = "completedSurveys")
+
 
 # END ####
 
