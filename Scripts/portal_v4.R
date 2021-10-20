@@ -340,7 +340,7 @@ output$site_out <- DT::renderDataTable({
     attach_error
     } else {
   # If they are attached but the sheet isn't selected in the chechboxes
-  if(nrow(filter(chosen_tabs(), V1 == "siteData")) == 0){
+  if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){
     box_error
     } else {
   # If data are attached and checkbox is selected, preview the table
@@ -357,7 +357,7 @@ output$site_out <- DT::renderDataTable({
   ## So comments are excluded for brevity
 output$dens_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
-  else { if(nrow(filter(chosen_tabs(), V1 == "densityData")) == 0){ box_error }
+  else { if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "densityData")) == 0){ box_error }
     else {
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
@@ -370,7 +370,7 @@ output$dens_out <- DT::renderDataTable({
 # plantData tab
 output$plant_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
-  else { if(nrow(filter(chosen_tabs(), V1 == "plantData")) == 0){ box_error }
+  else { if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ box_error }
     else {
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
@@ -383,7 +383,7 @@ output$plant_out <- DT::renderDataTable({
 # reproData
 output$repr_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
-  else { if(nrow(filter(chosen_tabs(), V1 == "reproData")) == 0){ box_error }
+  else { if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){ box_error }
     else {
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
@@ -396,7 +396,7 @@ output$repr_out <- DT::renderDataTable({
 # herbivoreData
 output$bug_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
-  else { if(nrow(filter(chosen_tabs(), V1 == "herbivoreData")) == 0){ box_error }
+  else { if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){ box_error }
     else {
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
@@ -410,7 +410,7 @@ output$bug_out <- DT::renderDataTable({
 # newColumns
 output$new_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
-  else { if(nrow(filter(chosen_tabs(), V1 == "newColumns")) == 0){ box_error }
+  else { if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ box_error }
     else {
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
@@ -423,7 +423,7 @@ output$new_out <- DT::renderDataTable({
 # Notes tab
 output$notes_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
-  else { if(nrow(filter(chosen_tabs(), V1 == "notes")) == 0){ box_error }
+  else { if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "notes")) == 0){ box_error }
     else {
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
