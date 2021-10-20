@@ -63,10 +63,9 @@ tags$h2("Pre-Data Submission"),
   # UI: Gather File Name Parts ####
 ## ------------------------------ ##
 # Add a subtitle & more information
-h3("Survey Identifying Information"),
-tags$h5("To ensure that the data you are about to submit is 
-        correctly named, please enter the following 
-        survey-level information as you submit data."),
+h3("Survey Identifying Information (REQUIRED)"),
+tags$h5("The following information is required to give a unique name to your data file.
+        Please fill out all of the following as best you can."),
           
 # Add a warning about underscores
 tags$h5("Please", tags$strong("DO NOT"),
@@ -119,7 +118,87 @@ dateInput(inputId = "date",
           format = 'yyyy-mm-dd'),
 
 # Note on date
-tags$h5("Note: if sampling took >1 day, pick first day")
+tags$h5("Note: if sampling took >1 day, pick first day"),
+
+# Add a horizontal line
+tags$hr(),
+
+## ------------------------------ ##
+   # UI: Other Survey Info ####
+## ------------------------------ ##
+# We want to harvest some completed surveys information too
+# So we'll add another subheading explaining that
+h3("Additional Information (Optional", tags$strong("though Encouraged!"), ")"),
+tags$h5("The following information is useful site-level metadata that we expect
+        may vary among scientists within a species.
+        Please fill out as much as possible"),
+
+# And collect some more information
+## Plant Common Name
+textInput(
+  inputId = "common",
+  label = tags$h4("Common Name of Surveyed Plant"),
+  placeholder = "broadleaf plantain"
+),
+
+## Other Observers
+textInput(
+  inputId = "helpers",
+  label = tags$h4("Other Data Collectors"),
+  placeholder = "R Carson; C Darwin"
+),
+
+tags$h5("Please separate observers with a semicolon (';')"),
+
+## Foliage type - simple
+selectInput(
+  inputId = "flgSimp",
+  label = tags$h4("Foliage Type - Simple"),
+  choices = c("-", "Deciduous", "Evergreen", "Annual")
+),
+
+## Foliage type - verbose
+textInput(
+  inputId = "flgVerbose",
+  label = tags$h4("Foliage Type - Verbose"),
+  placeholder = "Semi-deciduous: loses 50% leaves in winter"
+),
+
+## Native status
+selectInput(
+  inputId = "native",
+  label = tags$h4("Native Status (at your site)"),
+  choices = c("-", "Native", "Non-Native")
+),
+
+## Site type
+selectInput(
+  inputId = "siteType",
+  label = tags$h4("What is the status of the population at this site?"),
+  choices = c("-", "Natural", "Managed", "Cultivated")
+),
+
+## Single stage
+radioButtons(
+  inputId = "singleStage",
+  label = tags$h4("Only Plants of One Lifestage Recorded?"),
+  choices = c("-", 'yes', 'no')
+),
+
+## General notes
+textInput(
+  inputId = "miscNotes",
+  label = tags$h4("Notes"),
+  placeholder = "Any other global comments you feel are important."
+),
+
+## ------------------------------ ##
+   # UI: End Sidebar Contents ####
+## ------------------------------ ##
+
+# Closing out notes
+tags$h5("Thank you for entering this pre-submission information!"),
+tags$h5("Please proceed to the main panel on the right")
 
 ## ----------------------------------------------- ##
            # UI: Main Panel Contents ####
