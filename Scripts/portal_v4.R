@@ -295,31 +295,6 @@ tabsetPanel(
 tags$hr(),
 
 ## ------------------------------ ##
-    # UI: Test Outputs ####
-## ------------------------------ ##
-# Give it a title
-tags$h3("Test Outputs"),
-
-# Spit out a table of selected options in the checkboxes
-tags$h5("Test Out 1"),
-verbatimTextOutput(outputId = "test_out1"),
-tags$h5("Test Out 2"),
-#DT::dataTableOutput(outputId = "test_out2"),
-verbatimTextOutput(outputId = 'test_out2'),
-tags$h5("Test Out 3"),
-verbatimTextOutput(outputId = 'test_out3'),
-tags$h5("Test Out 4"),
-verbatimTextOutput(outputId = 'test_out4'),
-
-# Explain the output
-tags$h5("This section is purely for diagnostic purposes;
-        As each portal version is created it is helpful to have spaces
-        to export inner workings for visualization"),
-
-# End with a horizontal line
-tags$hr(),
-
-## ------------------------------ ##
     # UI: Authorized Email ####
 ## ------------------------------ ##
 # Request email
@@ -425,42 +400,6 @@ meta <- reactive({
    "singleStage" = input$singleStage,
    "generalNotes" = input$miscNotes
   )
-})
-
-## ----------------------------------------------- ##
-         # S: Test Outputs Creation ####
-## ----------------------------------------------- ##
-# Make the chosen checkboxes a small table for the user to examine
-output$test_out1 <- renderPrint({
-  chosen_tabs()
-  })
-
-# Print the checkbox output to be able to see it better
-  ## Note these outputs are to help me diagnose issues in the app
-  ## they will not be included in the final app
-output$test_out2 <- renderPrint({
-  dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")
-})
-
-#output$test_out2 <- DT::renderDataTable({
-#  DT::datatable(
-#    data = meta(),
-#    rownames = F)
-#  })
-
-# See if that works as intended
-output$test_out3 <- renderPrint({
-  chosen_tabs()
-  })
-
-
-
-
-# Test how bracket notation affects the reactive
-output$test_out4 <- renderPrint({
-  for (i in 1:nrow(chosen_tabs())) {
-    print(as.character(chosen_tabs()[i, ]))
-  }
 })
 
 ## ----------------------------------------------- ##
