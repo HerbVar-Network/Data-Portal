@@ -2,10 +2,9 @@
               # HerbVar Data Submission Portal - Version 5
 ## --------------------------------------------------------------------- ##
 # Structure:
-  ## Retains the checkbox structure first instantiated in version 2
-  ## Retains the data preview tabs first instantiated in ver. 3
-  ## Retains harvesting of survey-level metadata first introduced in ver. 4
-  ## Also introduces rudimentary QA/QC on attached data
+  ## Retains the checkbox structure (see ver. 2)
+  ## Retains the data preview tabs (see ver. 3)
+  ## Retains harvesting of survey-level metadata (see ver. 4)
 
 # Clear environment
 rm(list = ls())
@@ -303,10 +302,10 @@ tags$h3("Test Outputs"),
 
 # Spit out a table of selected options in the checkboxes
 tags$h5("Test Out 1"),
-tableOutput(outputId = "test_out1"),
+verbatimTextOutput(outputId = "test_out1"),
 tags$h5("Test Out 2"),
-DT::dataTableOutput(outputId = "test_out2"),
-#verbatimTextOutput(outputId = 'test_out2'),
+#DT::dataTableOutput(outputId = "test_out2"),
+verbatimTextOutput(outputId = 'test_out2'),
 tags$h5("Test Out 3"),
 verbatimTextOutput(outputId = 'test_out3'),
 tags$h5("Test Out 4"),
@@ -432,14 +431,17 @@ meta <- reactive({
          # S: Test Outputs Creation ####
 ## ----------------------------------------------- ##
 # Make the chosen checkboxes a small table for the user to examine
-output$test_out1 <- renderTable(expr = input$data_collected,
-                             rownames = F,
-                             colnames = F,
-                             align = 'c')
+output$test_out1 <- renderPrint({
+  chosen_tabs()
+  })
 
 # Print the checkbox output to be able to see it better
   ## Note these outputs are to help me diagnose issues in the app
   ## they will not be included in the final app
+output$test_out2 <- renderPrint({
+  dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")
+})
+
 #output$test_out2 <- DT::renderDataTable({
 #  DT::datatable(
 #    data = meta(),
@@ -450,6 +452,9 @@ output$test_out1 <- renderTable(expr = input$data_collected,
 output$test_out3 <- renderPrint({
   chosen_tabs()
   })
+
+
+
 
 # Test how bracket notation affects the reactive
 output$test_out4 <- renderPrint({
@@ -475,7 +480,7 @@ output$site_out <- DT::renderDataTable({
     attach_error
     } else {
   # If they are attached but the sheet isn't selected in the chechboxes
-  if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){
+  if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){
     box_error
     } else {
   # If data are attached and checkbox is selected, preview the table
@@ -492,7 +497,7 @@ output$site_out <- DT::renderDataTable({
   ## So comments are excluded for brevity
 output$dens_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
-  else { if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "densityData")) == 0){ box_error }
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "densityData")) == 0){ box_error }
     else {
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
@@ -505,7 +510,7 @@ output$dens_out <- DT::renderDataTable({
 # plantData tab
 output$plant_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
-  else { if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ box_error }
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ box_error }
     else {
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
@@ -518,7 +523,7 @@ output$plant_out <- DT::renderDataTable({
 # reproData
 output$repr_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
-  else { if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){ box_error }
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){ box_error }
     else {
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
@@ -531,7 +536,7 @@ output$repr_out <- DT::renderDataTable({
 # herbivoreData
 output$bug_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
-  else { if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){ box_error }
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){ box_error }
     else {
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
@@ -545,7 +550,7 @@ output$bug_out <- DT::renderDataTable({
 # newColumns
 output$new_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
-  else { if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ box_error }
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ box_error }
     else {
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
@@ -558,7 +563,7 @@ output$new_out <- DT::renderDataTable({
 # Notes tab
 output$notes_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
-  else { if(nrow(filter(chosen_tabs(), chosen_tabs()[1] == "notes")) == 0){ box_error }
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "notes")) == 0){ box_error }
     else {
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
@@ -567,7 +572,6 @@ output$notes_out <- DT::renderDataTable({
         rownames = F) }
   }
 })
-
 
 ## ----------------------------------------------- ##
            # S: 'Upload Data' Button ####  
