@@ -4,7 +4,7 @@
 # Structure:
   ## Retains the checkbox structure first instantiated in version 2
   ## Retains the data preview tabs first instantiated in version 3
-  ## Also performs some preliminary QA/QC for some of the data tabs
+  ## Also asks for and harvests additional survey-level metadata
 
 # Clear environment
 rm(list = ls())
@@ -108,7 +108,9 @@ textInput(
   ),
           
 # Note on site name
-tags$h5("Note: site name will be capped at 8 characters automatically"),
+tags$h5("Note: site name will be capped at 8 characters automatically",
+        tags$strong("for file name,"),
+        "but full name will also be retained, so be as detailed as needed"),
           
 ## Sampling date
   ### Gets around possible issue of Name_Species_Site not being unique / survey
@@ -129,8 +131,8 @@ tags$hr(),
 # We want to harvest some completed surveys information too
 # So we'll add another subheading explaining that
 h3("Additional Information (Optional", tags$strong("though Encouraged!"), ")"),
-tags$h5("The following information is useful site-level metadata that we expect
-        may vary among scientists within a species.
+tags$h5("The following information is useful survey-level metadata that
+        we expect may vary among scientists within a species.
         Please fill out as much as possible"),
 
 # And collect some more information
@@ -174,16 +176,23 @@ selectInput(
 ## Site type
 selectInput(
   inputId = "siteType",
-  label = tags$h4("What is the status of the population at this site?"),
+  label = tags$h4("What is the",
+                  tags$strong("management"),
+                  "status of the species at this site?"),
   choices = c("-", "Natural", "Managed", "Cultivated")
 ),
 
 ## Single stage
 radioButtons(
   inputId = "singleStage",
-  label = tags$h4("Only Plants of One Lifestage Recorded?"),
+  label = tags$h4("Did you record",
+                  tags$strong("only a single"),
+                  "lifestage of plant"),
   choices = c("-", 'yes', 'no')
 ),
+
+# Explanation
+tags$h5("E.g., Only surveying flowering plants, seedlings, etc."),
 
 ## General notes
 textInput(
@@ -195,9 +204,8 @@ textInput(
 ## ------------------------------ ##
    # UI: End Sidebar Contents ####
 ## ------------------------------ ##
-
 # Closing out notes
-tags$h5("Thank you for entering this pre-submission information!"),
+tags$h5(tags$strong("Thank you for entering this pre-submission information!")),
 tags$h5("Please proceed to the main panel on the right")
 
 ## ----------------------------------------------- ##
@@ -293,9 +301,14 @@ tags$hr(),
 tags$h3("Test Outputs"),
 
 # Spit out a table of selected options in the checkboxes
+tags$h5("Test Out 1"),
 tableOutput(outputId = "test_out1"),
-verbatimTextOutput(outputId = 'test_out2'),
+tags$h5("Test Out 2"),
+DT::dataTableOutput(outputId = "test_out2"),
+#verbatimTextOutput(outputId = 'test_out2'),
+tags$h5("Test Out 3"),
 verbatimTextOutput(outputId = 'test_out3'),
+tags$h5("Test Out 4"),
 verbatimTextOutput(outputId = 'test_out4'),
 
 # Explain the output
@@ -336,6 +349,10 @@ actionButton(inputId = "upload_button",
 # After clicking the button, return the message created in the server
 verbatimTextOutput("upload_msg"),
 
+# And have a warning on timing
+tags$h5("Note that upload speed varies depending on internet speed & file size.
+        A confirmation message will appear when upload is successful"),
+
 # Add a line for some breathing room at the bottom
 tags$hr(),
 
@@ -357,7 +374,8 @@ server.v4 <- function(input, output, session) {
 ## ----------------------------------------------- ##
 # Render the filename from the supplied information in the UI
   ## Inside of a render*() function to update dynamically
-output$fileID <- renderPrint({
+# Gather file name
+surveyID <- reactive({
   paste(
     input$pi_last,
     input$pi_first,
@@ -368,12 +386,46 @@ output$fileID <- renderPrint({
     sep = '_')
   })
   
+# Call it as an output
+output$fileID <- renderPrint({ surveyID() })
+
 ## ----------------------------------------------- ##
         # S: Collect Checkbox Choices ####
 ## ----------------------------------------------- ##
 # Get an object of the selected checkboxes
-chosen_tabs <- reactive({as.data.frame(as.matrix(
-  (str_split(string = input$data_collected, pattern = "\\s+"))))})
+chosen_tabs <- reactive({
+  as.data.frame(
+    as.matrix(
+      str_split(string = input$data_collected, pattern = "\\s+")
+      )
+    )
+  })
+
+## ----------------------------------------------- ##
+       # Collect Bonus Survey Metadata ####
+## ----------------------------------------------- ##
+# Collect all of the entered info in a reactive dataframe
+meta <- reactive({
+  data.frame(
+   "fileName" = surveyID(),
+   "portalUser" = input$auth_email,
+   "PI_lastName" = input$pi_last,
+   "PI_firstName" = input$pi_first,
+   "plantGenus" = input$genus,
+   "plantSpecies" = paste(input$genus, input$sp, sep = '_'),
+   "plantCommon" = input$common,
+   "siteSimp" = str_sub(input$site, start = 1, end = 8),
+   "siteVerbose" = input$site,
+   "surveyDate" = input$date,
+   "otherObservers" = input$helpers,
+   "foliageTypeSimp" = input$flgSimp,
+   "foliageTypeVerbose" = input$flgVerbose,
+   "nativeStatus" = input$native,
+   "siteType" = input$siteType,
+   "singleStage" = input$singleStage,
+   "generalNotes" = input$miscNotes
+  )
+})
 
 ## ----------------------------------------------- ##
          # S: Test Outputs Creation ####
@@ -387,8 +439,11 @@ output$test_out1 <- renderTable(expr = input$data_collected,
 # Print the checkbox output to be able to see it better
   ## Note these outputs are to help me diagnose issues in the app
   ## they will not be included in the final app
-output$test_out2 <- renderPrint({input$data_collected})
-
+#output$test_out2 <- DT::renderDataTable({
+#  DT::datatable(
+#    data = meta(),
+#    rownames = F)
+#  })
 
 # See if that works as intended
 output$test_out3 <- renderPrint({
@@ -546,18 +601,6 @@ if(is.null(input$file_upload))
 # If there is a file, retrieve it
 upload <- input$file_upload
       
-# If the file is NULL, return NULL
-if (is.null(upload)) { return(NULL) }
-
-# Gather the name the users entered in the UI
-surveyID <- paste(input$pi_last,
-                  input$pi_first,
-                  input$genus,
-                  input$sp,
-                  str_sub(input$site, start = 1, end = 8),
-                  input$date,
-                  sep = '_')
-
 ## ------------------------------ ##
   # S: Get all Checked Sheets ####
 ## ------------------------------ ##
@@ -591,16 +634,24 @@ gs4_auth(email = input$auth_email)
 # Loop to save the data from the list
 for (i in 1:length(data_files)) {
   # Create a GoogleSheet of each datafile
-  gs4_create(name = paste0(surveyID, "_",
+  gs4_create(name = paste0(surveyID(), "_",
                            names(data_files)[i]),
              sheets = data_files[i])
   
   # Move each one to the pre-specified correct folder
-  drive_mv(file = paste0(surveyID, "_",
+  drive_mv(file = paste0(surveyID(), "_",
                          names(data_files)[i]),
            path = "HerbVar Phase II Data - All Uploads/App Test Area/")
-  
+
 }
+
+## ------------------------------ ##
+  # S: Save Entered Metadata ####
+## ------------------------------ ##
+# Add the survey metadata to the Completed Surveys file
+sheet_append(ss = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKhWYkt3MeWUFYu2LugHRHE6Q/edit?usp=sharing",
+             data = meta(),
+             sheet = "completedSurveys")
 
 # Successful upload message
 upload_msg('Data uploaded. Thank you!')
