@@ -44,6 +44,9 @@ tags$h4("You", tags$strong("must"),
         tags$a(href = "http://herbvar.org/protocols.html",
                "here.")),
 
+# And instruct them on the use of the app
+tags$h4("Please follow the numbered steps to upload your data successfully."),
+
 # Add a line separating this from the rest of the app
 tags$hr(),
   
@@ -64,7 +67,7 @@ tags$h2("Pre-Data Submission"),
   # UI: Gather File Name Parts ####
 ## ------------------------------ ##
 # Add a subtitle & more information
-h3("Survey Identifying Information (REQUIRED)"),
+h3("1. Survey Identifying Information (REQUIRED)"),
 tags$h5("The following information is required to give a unique name to your data file.
         Please fill out all of the following as best you can."),
           
@@ -131,7 +134,7 @@ tags$hr(),
 ## ------------------------------ ##
 # We want to harvest some completed surveys information too
 # So we'll add another subheading explaining that
-h3("Additional Information (Optional", tags$strong("though Encouraged!"), ")"),
+h3("2. Additional Information (Optional", tags$strong("though Encouraged!"), ")"),
 tags$h5("The following information is useful survey-level metadata that
         we expect may vary among scientists within a species.
         Please fill out as much as possible"),
@@ -207,7 +210,7 @@ textInput(
 ## ------------------------------ ##
 # Closing out notes
 tags$h5(tags$strong("Thank you for entering this pre-submission information!")),
-tags$h5("Please proceed to the main panel on the right")
+tags$h5("Please proceed to the main panel on the right"),
 
 ## ----------------------------------------------- ##
            # UI: Main Panel Contents ####
@@ -225,7 +228,7 @@ tags$h2("Data Submission Process"),
     # UI: File Name Preview ####
 ## ------------------------------ ##
 # Give it a title
-tags$h3("File Name Preview"),
+tags$h3("3. Check File Name Preview"),
                   
 # Output file name from user inputs
 verbatimTextOutput(outputId = "fileID",
@@ -242,7 +245,7 @@ tags$hr(),
      # UI: Data Checkboxes ####
 ## ------------------------------ ##
 # Prompt user to identify what data they collected
-tags$h3("What tabs of the Excel file should be uploaded?"),
+tags$h3("4. Select which Excel sheets you want to upload"),
 
 # Actual checkbox creation
 checkboxGroupInput(
@@ -255,7 +258,7 @@ checkboxGroupInput(
 ),
 
 # More notes on the checkboxes
-tags$h5("Note: only checked tabs will be uploaded"),
+tags$h5("Note that only checked tabs will be uploaded"),
 
 # Add a line separating this from the rest of the app
 tags$hr(),
@@ -265,7 +268,7 @@ tags$hr(),
 ## ------------------------------ ##
 # Provide a place for Excel file uploading
 fileInput(inputId = "file_upload",
-          label = tags$h3("Attach Excel File Here"),
+          label = tags$h3("5. Attach Excel File"),
           accept = ".xlsx"),
 
 # Add a horizontal line
@@ -275,7 +278,7 @@ tags$hr(),
      # UI: Preview Panels ####
 ## ------------------------------ ##
 # Give a title above this section
-tags$h3("Preview Data"),
+tags$h3("6. Preview Data"),
 
 # Make tabs for each sheet of the data
 tabsetPanel(
@@ -296,7 +299,12 @@ tags$hr(),
       # UI: QA/QC Panels ####
 ## ------------------------------ ##
 # Give a title above this section
-tags$h3("Preliminary Error Checking"),
+tags$h3("7. Check errors identified by app"),
+
+# Tell people what to do if there are errors
+tags$h5("Please fix the errors (solutions are provided with error message)
+        before uploading your data."),
+tags$h5("If necessary, fix your data in Excel and re-attach data to the app."),
 
 # Make tabs for each sheet of the data
 tabsetPanel(
@@ -320,8 +328,9 @@ tags$hr(),
 # Request email
 textInput(
   inputId = "auth_email",
-  label = tags$h3("GoogleDrive-Authorized Email"),
-  placeholder = "me@gmail.com"
+  label = tags$h3("8. Enter GoogleDrive-Authorized Email"),
+  placeholder = "me@gmail.com",
+  width = '85%'
 ),
 
 # Note on email
@@ -337,7 +346,10 @@ tags$hr(),
 ## ------------------------------ ##
       # UI: Upload Button ####
 ## ------------------------------ ##
-## Button to upload data on click
+# Provide heading for upload button
+tags$h3("9. Upload data!"),
+
+# Button to upload data on click
 actionButton(inputId = "upload_button",
              label = "Upload Attached Data"),
         
