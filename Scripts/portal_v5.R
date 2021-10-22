@@ -671,7 +671,13 @@ output$site_chk <- renderTable({
     if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){
       return(NULL) } else {
       # If data are attached and checkbox is selected, check for issues
-      site_actual()
+        data.frame("Errors" =
+                     ifelse(is.na(site_actual()$datum)[1:19],
+                            yes = paste0("No entry detected for '",
+                                         site_actual()$variable,
+                                         "'. Please enter that value and re-attach data"),
+                            no = NA)) %>%
+          dplyr::filter(!is.na(Errors))
       }
     }
 })
