@@ -266,79 +266,65 @@ rbind(
 ## ------------------------------ ##
 # Error wishlist:
   ## 1) numLeaves/numLeavesHerb missing data
-  ## 2) percHerbPlant missing data AND percLf 11-30 empty
-  ## 3) numLeavesHerb > numLeaves
-  ## 4) Percent columns should be between 0 and 100
-  ## 5) Numeric columns should be numeric
-  ## 6) surveyID, plantSpecies, date, and/or site only entered in first row
-  ## 7) Date in wrong format (i.e., should have only 9-10 characters)
+  ## 2) numLeavesHerb > numLeaves
+  ## 3) Percent columns should be between 0 and 100
+  ## 4) Date in wrong format (i.e., should have only 9-10 characters)
     ### This sheet is the most extensive
+
+# Errors to solve later (maybe)
+  ## percHerbPlant missing data AND percLf 11-30 empty
+  ## Numeric columns should be numeric
+  ## surveyID, plantSpecies, date, and/or site only entered in first row
 
 # Examine data
 head(plantData)
 
 # Check for errors
 rbind(
-  # Numeric columns non numeric
-  data.frame("Errors" = ifelse(
-    test = (
-      is.na(as.numeric(plantData$transectDist)) | 
-        is.na(as.numeric(plantData$subtransectDist)) |     
-        is.na(as.numeric(plantData$focalPlantCover)) | 
-        is.na(as.numeric(plantData$otherPlantCover)) | 
-        is.na(as.numeric(plantData$numPlantsinQuad)) | 
-        is.na(as.numeric(plantData$plantSize)) | 
-        is.na(as.numeric(plantData$numLeaves)) | 
-        is.na(as.numeric(plantData$numLeavesHerb)) | 
-        is.na(as.numeric(plantData$percHerbPlant)) | 
-        is.na(as.numeric(plantData$pathogenAmount)) | 
-        is.na(as.numeric(plantData$percLf1)) | 
-        is.na(as.numeric(plantData$percLf2)) | 
-        is.na(as.numeric(plantData$percLf3)) | 
-        is.na(as.numeric(plantData$percLf4)) | 
-        is.na(as.numeric(plantData$percLf5)) | 
-        is.na(as.numeric(plantData$percLf6)) | 
-        is.na(as.numeric(plantData$percLf7)) | 
-        is.na(as.numeric(plantData$percLf8)) | 
-        is.na(as.numeric(plantData$percLf9)) | 
-        is.na(as.numeric(plantData$percLf10))
-      ),
-    yes = paste0("Plant '", plantData$plantID, 
-                 "' has a letter or special character in one ",
-                 "(or more) of the following colunmns: ",
-                 "transectDist, subtransectDist, focalPlantCover",
-                 "otherPlantCover, numPlantsinQuad, plantSize",
-                 "numLeaves, numLeavesHerb, percHerbPlant",
-                 "pathogenAmount, percLf1-percLf10"
-    ),
-    no = NA)),
   # numLeaves/Herb missing data
   data.frame("Errors" = ifelse(
     test = (is.na(plantData$numLeaves) | is.na(plantData$numLeavesHerb)), 
     yes = paste0("Plant '", plantData$plantID, 
                  "' is missing numLeaves or numLeavesHerb"),
     no = NA))
-  # percHerbPlant missing but percLf11-30 not entered
-    ## Left alone for now because it generates a possibly incorrect error/row
-  #, data.frame("Errors" = ifelse(
-  #  is.na(plantData$percHerbPlant) & is.na(dplyr::select(plantData, dplyr::starts_with('percLf'))),
-  #  yes = paste0("Plant '", plantData$plantID, 
-  #              "' is missing percHerbPlant.",
-  #              "Disregard if percLf1-30 filled instead (see primary protocol)"),
-  #  no = NA
-  #))
-  
   # numLeavesHerb > numLeaves
   , data.frame("Errors" = ifelse(test = as.numeric(plantData$numLeavesHerb) > as.numeric(plantData$numLeaves),
                                  yes = paste0("Plant '", plantData$plantID, 
                                           "' numLeavesHerb (# damaged leaves) ",
                                           "is greater than numLeaves (total leaves)"),
                                  no = NA))
-  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
-  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
-  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
-  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
-  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
+  # Percents >100
+  , data.frame("Errors" = ifelse((as.numeric(plantData$focalPlantCover) > 100 |
+                                 as.numeric(plantData$otherPlantCover) > 100 |
+                                 as.numeric(plantData$percHerbPlant) > 100),
+                                 yes = paste0("Plant '", plantData$plantID, 
+                                              "' has percHerbPlant, focal, or otherPlantCover > 100%."),
+                                 no = NA))
+  # Percents <0
+  , data.frame("Errors" = ifelse((as.numeric(plantData$focalPlantCover) < 0 |
+                                    as.numeric(plantData$otherPlantCover) < 0 |
+                                    as.numeric(plantData$percHerbPlant) < 0),
+                                 yes = paste0("Plant '", plantData$plantID, 
+                                              "' has percHerbPlant, focal, or otherPlantCover < 0%."),
+                                 no = NA))
+  # Percent between 0 and 1
+  , data.frame("Errors" = ifelse(((as.numeric(plantData$focalPlantCover) > 0 & as.numeric(plantData$focalPlantCover) < 0.5) |
+                                     (as.numeric(plantData$otherPlantCover) > 0 & as.numeric(plantData$otherPlantCover) < 0.5) |
+                                     (as.numeric(plantData$percHerbPlant) > 0 & as.numeric(plantData$percHerbPlant) < 0.5)),
+                                 yes = paste0("Plant '", plantData$plantID, 
+                                              "' has a very small percHerbPlant, focal, or otherPlantCover (0 < x < 0.5).",
+                                              "Please check that you didn't enter a % in Excel (",
+                                              "this would auto-convert to a true percent upon uploading)"),
+                                 no = NA))
+  # Date incorrectly formatted
+  , data.frame("Errors" = ifelse(test = (nchar(plantData$date) != 9 & 
+                                   nchar(plantData$date) != 10),
+                                 yes = paste0("Plant '", plantData$plantID,
+                                              "' has an incorrectly formatted date. ",
+                                              "Please use yyyy.mm.dd format.",
+                                              "Be careful to use periods not slashes, ",
+                                              "this avoids Excel date issues"),
+                                 no = NA))
   ) %>%
   dplyr::filter(!is.na(Errors)) %>%
   dplyr::arrange(Errors)
@@ -357,7 +343,8 @@ rbind(
   data.frame("Errors" = ifelse(test = , yes = , no = ))
   #, data.frame("Errors" = ifelse(test = , yes = , no = ))
 ) %>%
-  dplyr::filter(!is.na(Errors))
+  dplyr::filter(!is.na(Errors)) %>%
+  dplyr::arrange(Errors)
 
 ## ------------------------------ ##
 # QA/QC: herbivoreData Checks ####
@@ -373,7 +360,8 @@ rbind(
   data.frame("Errors" = ifelse(test = , yes = , no = ))
   #, data.frame("Errors" = ifelse(test = , yes = , no = ))
 ) %>%
-  dplyr::filter(!is.na(Errors))
+  dplyr::filter(!is.na(Errors)) %>%
+  dplyr::arrange(Errors)
 
 ## ------------------------------ ##
 # QA/QC: newColumns Checks ####

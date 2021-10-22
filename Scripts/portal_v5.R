@@ -671,12 +671,13 @@ output$site_chk <- renderTable({
     if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){
       return(NULL) } else {
       # If data are attached and checkbox is selected, check for issues
+        rbind(
+        ## Any missing values
         data.frame("Errors" =
                      ifelse(is.na(site_actual()$datum)[1:19],
                             yes = paste0("No entry detected for '",
-                                         site_actual()$variable,
-                                         "'. Please enter that value and re-attach data"),
-                            no = NA)) %>%
+                                         site_actual()$variable, "'."),
+                            no = NA))) %>%
           dplyr::filter(!is.na(Errors))
       }
     }
@@ -690,7 +691,16 @@ output$dens_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "densityData")) == 0){ return(NULL) }
     else {
-      dens_actual()
+      # Quality assurance and control (QA/QC)
+      rbind(
+        # Any cells that would be coerced into numeric
+        data.frame("Errors" = ifelse(is.na(as.numeric(dens_actual()$numPlantsPer_m2)),
+                                     yes = paste0("This entry '",
+                                                  dens_actual()$numPlantsPer_m2,
+                                                  "' contains a letter or special character. "),
+                                     no = NA))
+      ) %>%
+        dplyr::filter(!is.na(Errors))
       }
   }
 })
@@ -700,7 +710,54 @@ output$plant_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ return(NULL) }
     else {
-      plant_actual()
+      rbind(
+        # numLeaves/Herb missing data
+        data.frame("Errors" = ifelse(
+          test = (is.na(plant_actual()$numLeaves) | is.na(plant_actual()$numLeavesHerb)), 
+          yes = paste0("Plant '", plant_actual()$plantID, 
+                       "' is missing numLeaves or numLeavesHerb"),
+          no = NA))
+        # numLeavesHerb > numLeaves
+        , data.frame("Errors" = ifelse(test = as.numeric(plant_actual()$numLeavesHerb) > as.numeric(plant_actual()$numLeaves),
+                                       yes = paste0("Plant '", plant_actual()$plantID, 
+                                                    "' numLeavesHerb (# damaged leaves) ",
+                                                    "is greater than numLeaves (total leaves)"),
+                                       no = NA))
+        # Percents >100
+        , data.frame("Errors" = ifelse((as.numeric(plant_actual()$focalPlantCover) > 100 |
+                                          as.numeric(plant_actual()$otherPlantCover) > 100 |
+                                          as.numeric(plant_actual()$percHerbPlant) > 100),
+                                       yes = paste0("Plant '", plant_actual()$plantID, 
+                                                    "' has percHerbPlant, focal, or otherPlantCover > 100%."),
+                                       no = NA))
+        # Percents <0
+        , data.frame("Errors" = ifelse((as.numeric(plant_actual()$focalPlantCover) < 0 |
+                                          as.numeric(plant_actual()$otherPlantCover) < 0 |
+                                          as.numeric(plant_actual()$percHerbPlant) < 0),
+                                       yes = paste0("Plant '", plant_actual()$plantID, 
+                                                    "' has percHerbPlant, focal, or otherPlantCover < 0%."),
+                                       no = NA))
+        # Percent between 0 and 1
+        , data.frame("Errors" = ifelse(((as.numeric(plant_actual()$focalPlantCover) > 0 & as.numeric(plant_actual()$focalPlantCover) < 0.5) |
+                                          (as.numeric(plant_actual()$otherPlantCover) > 0 & as.numeric(plant_actual()$otherPlantCover) < 0.5) |
+                                          (as.numeric(plant_actual()$percHerbPlant) > 0 & as.numeric(plant_actual()$percHerbPlant) < 0.5)),
+                                       yes = paste0("Plant '", plant_actual()$plantID, 
+                                                    "' has a very small percHerbPlant, focal, or otherPlantCover (0 < x < 0.5).",
+                                                    "Please check that you didn't enter a % in Excel (",
+                                                    "this would auto-convert to a true percent upon uploading)"),
+                                       no = NA))
+        # Date incorrectly formatted
+        , data.frame("Errors" = ifelse(test = (nchar(plant_actual()$date) != 9 & 
+                                                 nchar(plant_actual()$date) != 10),
+                                       yes = paste0("Plant '", plant_actual()$plantID,
+                                                    "' has an incorrectly formatted date. ",
+                                                    "Please use yyyy.mm.dd format.",
+                                                    "Be careful to use periods not slashes, ",
+                                                    "this avoids Excel date issues"),
+                                       no = NA))
+      ) %>%
+        dplyr::filter(!is.na(Errors)) %>%
+        dplyr::arrange(Errors)
       }
   }
 })
