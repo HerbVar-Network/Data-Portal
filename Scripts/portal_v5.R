@@ -5,6 +5,7 @@
   ## Retains the checkbox structure (see ver. 2)
   ## Retains the data preview tabs (see ver. 3)
   ## Retains harvesting of survey-level metadata (see ver. 4)
+  ## Should perform preliminary QA/QC on attached data
 
 # Clear environment
 rm(list = ls())
@@ -192,7 +193,7 @@ radioButtons(
 ),
 
 # Explanation
-tags$h5("E.g., Only surveying flowering plants, seedlings, etc."),
+tags$h5("E.g., Only surveyed flowering plants, or only seedlings, etc."),
 
 ## General notes
 textInput(
@@ -271,7 +272,7 @@ fileInput(inputId = "file_upload",
 tags$hr(),
 
 ## ------------------------------ ##
-        # UI: Tab Panels ####
+     # UI: Preview Panels ####
 ## ------------------------------ ##
 # Give a title above this section
 tags$h3("Preview Data"),
@@ -288,36 +289,30 @@ tabsetPanel(
   tabPanel(title = "notes", DT::dataTableOutput("notes_out")),
 ),
 
-# Below the tab, print the message about each tab (if it's not attached)
-#verbatimTextOutput("attach_msg"),
-
 # End with a horizontal line
 tags$hr(),
 
 ## ------------------------------ ##
-    # UI: Test Outputs ####
+      # UI: QA/QC Panels ####
 ## ------------------------------ ##
-# Give it a title
-tags$h3("Test Outputs"),
+# Give a title above this section
+tags$h3("Preliminary Error Checking"),
 
-# Spit out a table of selected options in the checkboxes
-tags$h5("Test Out 1"),
-verbatimTextOutput(outputId = "test_out1"),
-tags$h5("Test Out 2"),
-#DT::dataTableOutput(outputId = "test_out2"),
-verbatimTextOutput(outputId = 'test_out2'),
-tags$h5("Test Out 3"),
-verbatimTextOutput(outputId = 'test_out3'),
-tags$h5("Test Out 4"),
-verbatimTextOutput(outputId = 'test_out4'),
-
-# Explain the output
-tags$h5("This section is purely for diagnostic purposes;
-        As each portal version is created it is helpful to have spaces
-        to export inner workings for visualization"),
+# Make tabs for each sheet of the data
+tabsetPanel(
+  id = "check_tabs",
+  tabPanel(title = "siteData", DT::dataTableOutput("site_chk")),
+  tabPanel(title = "densityData", DT::dataTableOutput("dens_chk")),
+  tabPanel(title = "plantData", DT::dataTableOutput("plant_chk")),
+  tabPanel(title = "reproData", DT::dataTableOutput("repr_chk")),
+  tabPanel(title = "herbivoreData", DT::dataTableOutput("bug_chk")),
+  tabPanel(title = "newColumns", DT::dataTableOutput("new_chk")),
+  tabPanel(title = "notes", DT::dataTableOutput("notes_chk")),
+),
 
 # End with a horizontal line
 tags$hr(),
+
 
 ## ------------------------------ ##
     # UI: Authorized Email ####
@@ -355,6 +350,31 @@ tags$h5("Note that upload speed varies depending on internet speed & file size.
 
 # Add a line for some breathing room at the bottom
 tags$hr(),
+
+## ------------------------------ ##
+# UI: Test Outputs ####
+## ------------------------------ ##
+# Give it a title
+tags$h3("Test Outputs"),
+
+# Explain the output
+tags$h5("This section is purely for diagnostic purposes;
+        As each portal version is created it is helpful to have spaces
+        to export inner workings for visualization"),
+
+# Spit out a table of selected options in the checkboxes
+tags$h5("Test Out 1"),
+verbatimTextOutput(outputId = "test_out1"),
+tags$h5("Test Out 2"),
+#DT::dataTableOutput(outputId = "test_out2"),
+verbatimTextOutput(outputId = 'test_out2'),
+tags$h5("Test Out 3"),
+verbatimTextOutput(outputId = 'test_out3'),
+tags$h5("Test Out 4"),
+verbatimTextOutput(outputId = 'test_out4'),
+
+# End with a horizontal line
+tags$hr()
 
 ## ----------------------------------------------- ##
            # UI: Close UI Parentheses ####
@@ -435,6 +455,7 @@ output$test_out1 <- renderPrint({
   chosen_tabs()
   })
 
+
 # Print the checkbox output to be able to see it better
   ## Note these outputs are to help me diagnose issues in the app
   ## they will not be included in the final app
@@ -453,9 +474,6 @@ output$test_out3 <- renderPrint({
   chosen_tabs()
   })
 
-
-
-
 # Test how bracket notation affects the reactive
 output$test_out4 <- renderPrint({
   for (i in 1:nrow(chosen_tabs())) {
@@ -464,7 +482,7 @@ output$test_out4 <- renderPrint({
 })
 
 ## ----------------------------------------------- ##
-           # S: Create Tabs for Data ####  
+      # S: Create Tabs for Data PREVIEWS ####  
 ## ----------------------------------------------- ##
 # Make generic pseudo-error messages for the tabs when:
   ## 1) The data haven't been attached
@@ -570,6 +588,119 @@ output$notes_out <- DT::renderDataTable({
                           sheet = "notes")),
         options = list(pageLength = 5),
         rownames = F) }
+  }
+})
+
+## ----------------------------------------------- ##
+        # S: Create Tabs for Data CHECKS ####  
+## ----------------------------------------------- ##
+# siteData tab
+output$site_chk <- DT::renderDataTable({
+  # Return NULL if either (1) no data are attached OR
+  if(is.null(input$file_upload)){ return(NULL) } else {
+    # (2) This tab isn't selected
+    if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){
+      return(NULL) } else {
+      # If data are attached and checkbox is selected, preview the table
+      DT::datatable(data = as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "siteData")),
+        options = list(pageLength = 5),
+        rownames = F) }
+  }
+})
+
+# densityData tab
+## Note, the following do the same thing as the siteData tab
+## So comments are excluded for brevity
+output$dens_chk <- DT::renderDataTable({
+  if(is.null(input$file_upload)){ return(NULL) }
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "densityData")) == 0){ return(NULL) }
+    else {
+      DT::datatable(data = as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "densityData")),
+        options = list(pageLength = 5),
+        rownames = F) }
+  }
+})
+
+# plantData tab
+output$plant_chk <- DT::renderDataTable({
+  if(is.null(input$file_upload)){ return(NULL) }
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ return(NULL) }
+    else {
+      DT::datatable(data = as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "plantData")),
+        options = list(pageLength = 5),
+        rownames = F) }
+  }
+})
+
+# reproData
+output$repr_chk <- DT::renderDataTable({
+  if(is.null(input$file_upload)){ return(NULL) }
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){ return(NULL) }
+    else {
+      DT::datatable(data = as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "reproData")),
+        options = list(pageLength = 5),
+        rownames = F) }
+  }
+})
+
+# herbivoreData
+output$bug_chk <- DT::renderDataTable({
+  if(is.null(input$file_upload)){ return(NULL) }
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){ return(NULL) }
+    else {
+      DT::datatable(data = as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "herbivoreData")),
+        options = list(pageLength = 5),
+        rownames = F) }
+  }
+})
+
+
+# newColumns
+output$new_chk <- DT::renderDataTable({
+  if(is.null(input$file_upload)){ return(NULL) }
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ return(NULL) }
+    else {
+      DT::datatable(data = as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "newColumns")),
+        options = list(pageLength = 5),
+        rownames = F) }
+  }
+})
+
+# Notes tab
+#output$notes_chk <- DT::renderDataTable({
+output$notes_chk <- renderPrint({
+    if(is.null(input$file_upload)){ return(NULL) }
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "notes")) == 0){ return(NULL) }
+    else {
+      
+      # Read in the note tab
+      note_tab <- as.data.frame(
+        readxl::read_xlsx(path = input$file_upload$datapath,
+                          sheet = "notes"))
+      
+      # Check it for issues
+        ## For each found, wrap it into an 'issues' dataframe
+      note_issues_v1 <- data.frame(
+        "Errors" = ifelse(test = is.na(note_tab$globalNotes) == T,
+                                yes = 'You chose to upload this tab but no notes are detected.
+                                Please only upload sheets with data',
+                                no = 'NA')
+      )
+      
+      #return(note_issues_v1) }
+      DT::datatable(data = note_issues_v1) }
   }
 })
 
