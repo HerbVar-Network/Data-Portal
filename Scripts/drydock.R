@@ -196,9 +196,19 @@ c('siteData', 'densityData', 'plantData', 'reproData',
     assign(x = sheet,
            value = as.data.frame(
              readxl::read_xlsx(path = "Nick HV Fake Data.xlsx",
-                               sheet = sheet)),
+                               sheet = sheet,
+                               col_types = 'text')),
            envir = .GlobalEnv)
     })
+
+# Template check format
+#rbind(
+#  data.frame("Errors" = 'ifelse error check goes here')
+#  #, data.frame("Errors" = )
+#  ) %>%
+#  dplyr::filter(!is.na(Errors))
+
+
 
 ## ------------------------------ ##
    # QA/QC: siteData Checks ####
@@ -224,8 +234,8 @@ data.frame("Errors" =
                                 yes = paste0("No entry detected for '",
                                              siteData$variable,
                                              "'. Please enter that value and re-attach data"),
-                                no = NA)),
-data.frame("Errors" = 'test')
+                                no = NA))
+# , data.frame("Errors" = )
 ) %>%
   dplyr::filter(!is.na(Errors))
 
@@ -234,21 +244,104 @@ data.frame("Errors" = 'test')
   # QA/QC: densityData Checks ####
 ## ------------------------------ ##
 # Error wishlist:
-## 1) 
+## 1) Entries should be numeric
+## 2) No special characters
 
 # Examine data
 head(densityData)
 
+# Fix issues
+rbind(
+  data.frame("Errors" = ifelse(is.na(suppressWarnings(as.numeric(densityData$numPlantsPer_m2))),
+                               yes = paste0("This entry '",
+                                            densityData$numPlantsPer_m2,
+                                            "' contains a letter or special character. ",
+                                            "Please revise and re-attach data"),
+                               no = NA))
+  ) %>%
+  dplyr::filter(!is.na(Errors))
 
 ## ------------------------------ ##
 # QA/QC: plantData Checks ####
 ## ------------------------------ ##
 # Error wishlist:
-## 1) 
+  ## 1) numLeaves/numLeavesHerb missing data
+  ## 2) percHerbPlant missing data AND percLf 11-30 empty
+  ## 3) numLeavesHerb > numLeaves
+  ## 4) Percent columns should be between 0 and 100
+  ## 5) Numeric columns should be numeric
+  ## 6) surveyID, plantSpecies, date, and/or site only entered in first row
+  ## 7) Date in wrong format (i.e., should have only 9-10 characters)
+    ### This sheet is the most extensive
 
 # Examine data
 head(plantData)
 
+# Check for errors
+rbind(
+  # Numeric columns non numeric
+  data.frame("Errors" = ifelse(
+    test = (
+      is.na(as.numeric(plantData$transectDist)) | 
+        is.na(as.numeric(plantData$subtransectDist)) |     
+        is.na(as.numeric(plantData$focalPlantCover)) | 
+        is.na(as.numeric(plantData$otherPlantCover)) | 
+        is.na(as.numeric(plantData$numPlantsinQuad)) | 
+        is.na(as.numeric(plantData$plantSize)) | 
+        is.na(as.numeric(plantData$numLeaves)) | 
+        is.na(as.numeric(plantData$numLeavesHerb)) | 
+        is.na(as.numeric(plantData$percHerbPlant)) | 
+        is.na(as.numeric(plantData$pathogenAmount)) | 
+        is.na(as.numeric(plantData$percLf1)) | 
+        is.na(as.numeric(plantData$percLf2)) | 
+        is.na(as.numeric(plantData$percLf3)) | 
+        is.na(as.numeric(plantData$percLf4)) | 
+        is.na(as.numeric(plantData$percLf5)) | 
+        is.na(as.numeric(plantData$percLf6)) | 
+        is.na(as.numeric(plantData$percLf7)) | 
+        is.na(as.numeric(plantData$percLf8)) | 
+        is.na(as.numeric(plantData$percLf9)) | 
+        is.na(as.numeric(plantData$percLf10))
+      ),
+    yes = paste0("Plant '", plantData$plantID, 
+                 "' has a letter or special character in one ",
+                 "(or more) of the following colunmns: ",
+                 "transectDist, subtransectDist, focalPlantCover",
+                 "otherPlantCover, numPlantsinQuad, plantSize",
+                 "numLeaves, numLeavesHerb, percHerbPlant",
+                 "pathogenAmount, percLf1-percLf10"
+    ),
+    no = NA)),
+  # numLeaves/Herb missing data
+  data.frame("Errors" = ifelse(
+    test = (is.na(plantData$numLeaves) | is.na(plantData$numLeavesHerb)), 
+    yes = paste0("Plant '", plantData$plantID, 
+                 "' is missing numLeaves or numLeavesHerb"),
+    no = NA))
+  # percHerbPlant missing but percLf11-30 not entered
+    ## Left alone for now because it generates a possibly incorrect error/row
+  #, data.frame("Errors" = ifelse(
+  #  is.na(plantData$percHerbPlant) & is.na(dplyr::select(plantData, dplyr::starts_with('percLf'))),
+  #  yes = paste0("Plant '", plantData$plantID, 
+  #              "' is missing percHerbPlant.",
+  #              "Disregard if percLf1-30 filled instead (see primary protocol)"),
+  #  no = NA
+  #))
+  
+  # numLeavesHerb > numLeaves
+  , data.frame("Errors" = ifelse(test = as.numeric(plantData$numLeavesHerb) > as.numeric(plantData$numLeaves),
+                                 yes = paste0("Plant '", plantData$plantID, 
+                                          "' numLeavesHerb (# damaged leaves) ",
+                                          "is greater than numLeaves (total leaves)"),
+                                 no = NA))
+  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
+  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
+  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
+  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
+  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
+  ) %>%
+  dplyr::filter(!is.na(Errors)) %>%
+  dplyr::arrange(Errors)
 
 ## ------------------------------ ##
 # QA/QC: reproData Checks ####
@@ -259,7 +352,12 @@ head(plantData)
 # Examine data
 head(reproData)
 
-
+# Check for errors
+rbind(
+  data.frame("Errors" = ifelse(test = , yes = , no = ))
+  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
+) %>%
+  dplyr::filter(!is.na(Errors))
 
 ## ------------------------------ ##
 # QA/QC: herbivoreData Checks ####
@@ -270,7 +368,12 @@ head(reproData)
 # Examine data
 head(herbivoreData)
 
-
+# Check for errors
+rbind(
+  data.frame("Errors" = ifelse(test = , yes = , no = ))
+  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
+) %>%
+  dplyr::filter(!is.na(Errors))
 
 ## ------------------------------ ##
 # QA/QC: newColumns Checks ####
@@ -281,7 +384,12 @@ head(herbivoreData)
 # Examine data
 head(newColumns)
 
-
+# Check for errors
+rbind(
+  data.frame("Errors" = ifelse(test = , yes = , no = ))
+  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
+) %>%
+  dplyr::filter(!is.na(Errors))
 
 ## ------------------------------ ##
 # QA/QC: notes Checks ####
@@ -292,7 +400,12 @@ head(newColumns)
 # Examine data
 head(notes)
 
-
+# Check for errors
+rbind(
+  data.frame("Errors" = ifelse(test = , yes = , no = ))
+  #, data.frame("Errors" = )
+) %>%
+  dplyr::filter(!is.na(Errors))
 
 # END ####
 
