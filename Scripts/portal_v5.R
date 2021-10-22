@@ -228,7 +228,7 @@ tags$h2("Data Submission Process"),
     # UI: File Name Preview ####
 ## ------------------------------ ##
 # Give it a title
-tags$h3("3. Check File Name Preview"),
+tags$h3("3. Check File Name"),
                   
 # Output file name from user inputs
 verbatimTextOutput(outputId = "fileID",
@@ -330,7 +330,7 @@ textInput(
   inputId = "auth_email",
   label = tags$h3("8. Enter GoogleDrive-Authorized Email"),
   placeholder = "me@gmail.com",
-  width = '85%'
+  width = '65%'
 ),
 
 # Note on email
@@ -376,7 +376,7 @@ tags$h5("This section is purely for diagnostic purposes;
 
 # Spit out a table of selected options in the checkboxes
 tags$h5("Test Out 1"),
-verbatimTextOutput(outputId = "test_out1"),
+tableOutput(outputId = "test_out1"),
 tags$h5("Test Out 2"),
 #DT::dataTableOutput(outputId = "test_out2"),
 verbatimTextOutput(outputId = 'test_out2'),
@@ -462,17 +462,28 @@ meta <- reactive({
 ## ----------------------------------------------- ##
          # S: Test Outputs Creation ####
 ## ----------------------------------------------- ##
-# Make the chosen checkboxes a small table for the user to examine
-output$test_out1 <- renderPrint({
-  chosen_tabs()
+# Test output 1
+note_test_reactive <- reactive({
+  as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
+                    sheet = "notes"))
+  })
+
+note_test_reactive_v2 <- reactive({
+  if(is.null(input$file_upload)) { return(NULL) } else {
+  as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
+                                  sheet = "notes")) }
+  
+})
+
+
+output$test_out1 <- renderTable({
+  note_test_reactive_v2()
   })
 
 
-# Print the checkbox output to be able to see it better
-  ## Note these outputs are to help me diagnose issues in the app
-  ## they will not be included in the final app
+# Test output 2
 output$test_out2 <- renderPrint({
-  dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")
+  nrow(note_test_reactive_v2())
 })
 
 #output$test_out2 <- DT::renderDataTable({
@@ -481,16 +492,73 @@ output$test_out2 <- renderPrint({
 #    rownames = F)
 #  })
 
-# See if that works as intended
+# output #3
 output$test_out3 <- renderPrint({
   chosen_tabs()
   })
 
-# Test how bracket notation affects the reactive
+# Output #4
 output$test_out4 <- renderPrint({
   for (i in 1:nrow(chosen_tabs())) {
     print(as.character(chosen_tabs()[i, ]))
   }
+})
+
+## ----------------------------------------------- ##
+        # S: Make all Sheets Reactive ####
+## ----------------------------------------------- ##
+# Each sheet needs to be made reactive for later reference
+  ## For simplicity's sake, only the siteData reactive is fully commented
+
+# siteData reactive
+site_actual <- reactive({
+  # If no file is attached, do nothing
+  if(is.null(input$file_upload)) { return(NULL) } else {
+  # If there is a file, make it reactive
+    as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
+                                    sheet = "siteData")) }
+})
+
+# densityData reactive
+dens_actual <- reactive({
+  if(is.null(input$file_upload)) { return(NULL) } else {
+    as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
+                                    sheet = "densityData")) }
+})
+
+# plantData reactive
+plant_actual <- reactive({
+  if(is.null(input$file_upload)) { return(NULL) } else {
+    as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
+                                    sheet = "plantData")) }
+})
+
+# reproData reactive
+repr_actual <- reactive({
+  if(is.null(input$file_upload)) { return(NULL) } else {
+    as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
+                                    sheet = "reproData")) }
+})
+
+# herbivoreData reactive
+bug_actual <- reactive({
+  if(is.null(input$file_upload)) { return(NULL) } else {
+    as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
+                                    sheet = "herbivoreData")) }
+})
+
+# newColumns reactive
+new_actual <- reactive({
+  if(is.null(input$file_upload)) { return(NULL) } else {
+    as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
+                                    sheet = "newColumns")) }
+})
+
+# notes reactive
+notes_actual <- reactive({
+  if(is.null(input$file_upload)) { return(NULL) } else {
+    as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
+                                    sheet = "notes")) }
 })
 
 ## ----------------------------------------------- ##
@@ -514,9 +582,7 @@ output$site_out <- DT::renderDataTable({
     box_error
     } else {
   # If data are attached and checkbox is selected, preview the table
-  DT::datatable(data = as.data.frame(
-    readxl::read_xlsx(path = input$file_upload$datapath,
-                      sheet = "siteData")),
+  DT::datatable(data = site_actual(),
     options = list(pageLength = 5),
     rownames = F) }
       }
@@ -529,9 +595,7 @@ output$dens_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "densityData")) == 0){ box_error }
     else {
-      DT::datatable(data = as.data.frame(
-        readxl::read_xlsx(path = input$file_upload$datapath,
-                          sheet = "densityData")),
+      DT::datatable(data = dens_actual(),
         options = list(pageLength = 5),
         rownames = F) }
   }
@@ -542,9 +606,7 @@ output$plant_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ box_error }
     else {
-      DT::datatable(data = as.data.frame(
-        readxl::read_xlsx(path = input$file_upload$datapath,
-                          sheet = "plantData")),
+      DT::datatable(data = plant_actual(),
         options = list(pageLength = 5),
         rownames = F) }
   }
@@ -555,9 +617,7 @@ output$repr_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){ box_error }
     else {
-      DT::datatable(data = as.data.frame(
-        readxl::read_xlsx(path = input$file_upload$datapath,
-                          sheet = "reproData")),
+      DT::datatable(data = repr_actual(),
         options = list(pageLength = 5),
         rownames = F) }
   }
@@ -568,23 +628,18 @@ output$bug_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){ box_error }
     else {
-      DT::datatable(data = as.data.frame(
-        readxl::read_xlsx(path = input$file_upload$datapath,
-                          sheet = "herbivoreData")),
+      DT::datatable(data = bug_actual(),
         options = list(pageLength = 5),
         rownames = F) }
   }
 })
-
 
 # newColumns
 output$new_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ box_error }
     else {
-      DT::datatable(data = as.data.frame(
-        readxl::read_xlsx(path = input$file_upload$datapath,
-                          sheet = "newColumns")),
+      DT::datatable(data = new_actual(),
         options = list(pageLength = 5),
         rownames = F) }
   }
@@ -614,17 +669,16 @@ output$site_chk <- DT::renderDataTable({
     if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){
       return(NULL) } else {
       # If data are attached and checkbox is selected, preview the table
-      DT::datatable(data = as.data.frame(
-        readxl::read_xlsx(path = input$file_upload$datapath,
-                          sheet = "siteData")),
+      DT::datatable(data = site_actual(),
         options = list(pageLength = 5),
         rownames = F) }
   }
 })
 
-# densityData tab
 ## Note, the following do the same thing as the siteData tab
 ## So comments are excluded for brevity
+
+# densityData tab
 output$dens_chk <- DT::renderDataTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "densityData")) == 0){ return(NULL) }
@@ -642,9 +696,7 @@ output$plant_chk <- DT::renderDataTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ return(NULL) }
     else {
-      DT::datatable(data = as.data.frame(
-        readxl::read_xlsx(path = input$file_upload$datapath,
-                          sheet = "plantData")),
+      DT::datatable(data = plant_actual(),
         options = list(pageLength = 5),
         rownames = F) }
   }
@@ -655,9 +707,7 @@ output$repr_chk <- DT::renderDataTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){ return(NULL) }
     else {
-      DT::datatable(data = as.data.frame(
-        readxl::read_xlsx(path = input$file_upload$datapath,
-                          sheet = "reproData")),
+      DT::datatable(data = repr_actual(),
         options = list(pageLength = 5),
         rownames = F) }
   }
@@ -668,53 +718,34 @@ output$bug_chk <- DT::renderDataTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){ return(NULL) }
     else {
-      DT::datatable(data = as.data.frame(
-        readxl::read_xlsx(path = input$file_upload$datapath,
-                          sheet = "herbivoreData")),
+      DT::datatable(data = bug_actual(),
         options = list(pageLength = 5),
         rownames = F) }
   }
 })
-
 
 # newColumns
 output$new_chk <- DT::renderDataTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ return(NULL) }
     else {
-      DT::datatable(data = as.data.frame(
-        readxl::read_xlsx(path = input$file_upload$datapath,
-                          sheet = "newColumns")),
+      DT::datatable(data = new_actual(),
         options = list(pageLength = 5),
         rownames = F) }
   }
 })
 
 # Notes tab
-#output$notes_chk <- DT::renderDataTable({
-output$notes_chk <- renderPrint({
-    if(is.null(input$file_upload)){ return(NULL) }
+output$notes_chk <- DT::renderDataTable({
+  if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "notes")) == 0){ return(NULL) }
     else {
-      
-      # Read in the note tab
-      note_tab <- as.data.frame(
-        readxl::read_xlsx(path = input$file_upload$datapath,
-                          sheet = "notes"))
-      
-      # Check it for issues
-        ## For each found, wrap it into an 'issues' dataframe
-      note_issues_v1 <- data.frame(
-        "Errors" = ifelse(test = is.na(note_tab$globalNotes) == T,
-                                yes = 'You chose to upload this tab but no notes are detected.
-                                Please only upload sheets with data',
-                                no = 'NA')
-      )
-      
-      #return(note_issues_v1) }
-      DT::datatable(data = note_issues_v1) }
+      DT::datatable(data = notes_actual(),
+        options = list(pageLength = 5),
+        rownames = F) }
   }
 })
+
 
 ## ----------------------------------------------- ##
            # S: 'Upload Data' Button ####  
