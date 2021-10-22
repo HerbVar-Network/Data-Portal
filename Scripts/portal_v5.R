@@ -309,13 +309,13 @@ tags$h5("If necessary, fix your data in Excel and re-attach data to the app."),
 # Make tabs for each sheet of the data
 tabsetPanel(
   id = "check_tabs",
-  tabPanel(title = "siteData", DT::dataTableOutput("site_chk")),
-  tabPanel(title = "densityData", DT::dataTableOutput("dens_chk")),
-  tabPanel(title = "plantData", DT::dataTableOutput("plant_chk")),
-  tabPanel(title = "reproData", DT::dataTableOutput("repr_chk")),
-  tabPanel(title = "herbivoreData", DT::dataTableOutput("bug_chk")),
-  tabPanel(title = "newColumns", DT::dataTableOutput("new_chk")),
-  tabPanel(title = "notes", DT::dataTableOutput("notes_chk")),
+  tabPanel(title = "siteData", tableOutput("site_chk")),
+  tabPanel(title = "densityData", tableOutput("dens_chk")),
+  tabPanel(title = "plantData", tableOutput("plant_chk")),
+  tabPanel(title = "reproData", tableOutput("repr_chk")),
+  tabPanel(title = "herbivoreData", tableOutput("bug_chk")),
+  tabPanel(title = "newColumns", tableOutput("new_chk")),
+  tabPanel(title = "notes", tableOutput("notes_chk")),
 ),
 
 # End with a horizontal line
@@ -571,7 +571,7 @@ attach_error <- data.frame("Alert" = c("No data detected",
   ## 2) The data were attached but a given sheet's box wasn't selected
 box_error <- data.frame("Alert" = c("Sheet not selected for upload",
                                      "Check the box above if you want to upload"))
-# siteData tab
+# siteData tab - preview
 output$site_out <- DT::renderDataTable({
   # If no data are attached, return the attach error
   if(is.null(input$file_upload)){
@@ -579,7 +579,9 @@ output$site_out <- DT::renderDataTable({
     } else {
   # If they are attached but the sheet isn't selected in the chechboxes
   if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){
-    box_error
+    data.frame("**WARNING**" = c("*This sheet is required*",
+                             "Please check the box above and
+                             ensure that this sheet is filled out"))
     } else {
   # If data are attached and checkbox is selected, preview the table
   DT::datatable(data = site_actual(),
@@ -588,7 +590,7 @@ output$site_out <- DT::renderDataTable({
       }
     })
 
-# densityData tab
+# densityData tab - preview
   ## Note, the following do the same thing as the siteData tab
   ## So comments are excluded for brevity
 output$dens_out <- DT::renderDataTable({
@@ -601,7 +603,7 @@ output$dens_out <- DT::renderDataTable({
   }
 })
 
-# plantData tab
+# plantData tab - preview
 output$plant_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ box_error }
@@ -612,7 +614,7 @@ output$plant_out <- DT::renderDataTable({
   }
 })
 
-# reproData
+# reproData - preview
 output$repr_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){ box_error }
@@ -623,7 +625,7 @@ output$repr_out <- DT::renderDataTable({
   }
 })
 
-# herbivoreData
+# herbivoreData - preview
 output$bug_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){ box_error }
@@ -634,7 +636,7 @@ output$bug_out <- DT::renderDataTable({
   }
 })
 
-# newColumns
+# newColumns - preview
 output$new_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ box_error }
@@ -645,7 +647,7 @@ output$new_out <- DT::renderDataTable({
   }
 })
 
-# Notes tab
+# Notes tab - preview
 output$notes_out <- DT::renderDataTable({
   if(is.null(input$file_upload)){ attach_error }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "notes")) == 0){ box_error }
@@ -661,91 +663,81 @@ output$notes_out <- DT::renderDataTable({
 ## ----------------------------------------------- ##
         # S: Create Tabs for Data CHECKS ####  
 ## ----------------------------------------------- ##
-# siteData tab
-output$site_chk <- DT::renderDataTable({
+# siteData tab - check
+output$site_chk <- renderTable({
   # Return NULL if either (1) no data are attached OR
   if(is.null(input$file_upload)){ return(NULL) } else {
     # (2) This tab isn't selected
     if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){
       return(NULL) } else {
-      # If data are attached and checkbox is selected, preview the table
-      DT::datatable(data = site_actual(),
-        options = list(pageLength = 5),
-        rownames = F) }
-  }
+      # If data are attached and checkbox is selected, check for issues
+      site_actual()
+      }
+    }
 })
 
 ## Note, the following do the same thing as the siteData tab
 ## So comments are excluded for brevity
 
-# densityData tab
-output$dens_chk <- DT::renderDataTable({
+# densityData tab - check
+output$dens_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "densityData")) == 0){ return(NULL) }
     else {
-      DT::datatable(data = as.data.frame(
-        readxl::read_xlsx(path = input$file_upload$datapath,
-                          sheet = "densityData")),
-        options = list(pageLength = 5),
-        rownames = F) }
+      dens_actual()
+      }
   }
 })
 
-# plantData tab
-output$plant_chk <- DT::renderDataTable({
+# plantData tab - check
+output$plant_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ return(NULL) }
     else {
-      DT::datatable(data = plant_actual(),
-        options = list(pageLength = 5),
-        rownames = F) }
+      plant_actual()
+      }
   }
 })
 
-# reproData
-output$repr_chk <- DT::renderDataTable({
+# reproData - check
+output$repr_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){ return(NULL) }
     else {
-      DT::datatable(data = repr_actual(),
-        options = list(pageLength = 5),
-        rownames = F) }
+      repr_actual()
+      }
   }
 })
 
-# herbivoreData
-output$bug_chk <- DT::renderDataTable({
+# herbivoreData - check
+output$bug_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){ return(NULL) }
     else {
-      DT::datatable(data = bug_actual(),
-        options = list(pageLength = 5),
-        rownames = F) }
+      bug_actual()
+      }
   }
 })
 
-# newColumns
-output$new_chk <- DT::renderDataTable({
+# newColumns - check
+output$new_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ return(NULL) }
     else {
-      DT::datatable(data = new_actual(),
-        options = list(pageLength = 5),
-        rownames = F) }
+      new_actual()
+      }
   }
 })
 
-# Notes tab
-output$notes_chk <- DT::renderDataTable({
+# Notes tab - check
+output$notes_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "notes")) == 0){ return(NULL) }
     else {
-      DT::datatable(data = notes_actual(),
-        options = list(pageLength = 5),
-        rownames = F) }
+      notes_actual()
+      }
   }
 })
-
 
 ## ----------------------------------------------- ##
            # S: 'Upload Data' Button ####  
