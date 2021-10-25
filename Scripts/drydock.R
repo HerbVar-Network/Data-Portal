@@ -195,7 +195,7 @@ c('siteData', 'densityData', 'plantData', 'reproData',
   purrr::map(function(sheet){ 
     assign(x = sheet,
            value = as.data.frame(
-             readxl::read_xlsx(path = "Nick HV Fake Data.xlsx",
+             readxl::read_xlsx(path = "HV Test Data - Flawed.xlsx",
                                sheet = sheet,
                                col_types = 'text')),
            envir = .GlobalEnv)
@@ -495,22 +495,36 @@ rbind(
   ## refer to that column (also easy)
   ## IN THE SAME LOOP (potentially more difficult)
 
-# Make the test object
+# Make the test object (version 1)
 test.pipe <- rbind(
   data.frame("Errors" =
                ifelse(is.na(siteData$datum)[1:19],
                       yes = paste0("No entry detected for '",
                                    siteData$variable,
                                    "'. Please enter that value and re-attach data"),
-                      no = NA))
-  # , data.frame("Errors" = )
-  ) %>%
+                      no = NA))) %>%
   dplyr::mutate(Errors = as.character(Errors)) %>%
   dplyr::filter(!is.na(Errors)) %>%
   add_row(Errors = "No (other) errors detected; thank you for your diligence!")
 
+# Let's try a better version (CURRENTLY NON-FUNCTIONAL)
+#test.pipe2 <- rbind(
+#  data.frame("Errors" =
+#               ifelse(is.na(siteData$datum)[1:19],
+#                      yes = paste0("No entry detected for '",
+#                                   siteData$variable,
+#                                   "'. Please enter that value and re-attach data"),
+#                      no = NA))) %>%
+#  dplyr::mutate(Errors = as.character(Errors)) %>%
+  # This line (somehow) removes everything in the column...
+#  dplyr::mutate(Errors = ifelse(all(is.na(Errors)),
+#                                yes = "green light",
+#                                no = Errors)) %>%
+#  dplyr::filter(!is.na(Errors)) %>%
+#  unique()
+
 # Look at the result
-test.pipe
+test.pipe2
 
 
 # END ####
