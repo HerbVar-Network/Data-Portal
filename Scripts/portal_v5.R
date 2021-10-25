@@ -5,7 +5,7 @@
   ## Retains the checkbox structure (see ver. 2)
   ## Retains the data preview tabs (see ver. 3)
   ## Retains harvesting of survey-level metadata (see ver. 4)
-  ## Should perform preliminary QA/QC on attached data
+  ## Performs preliminary QA/QC on attached data
 
 # Clear environment
 rm(list = ls())
@@ -300,9 +300,8 @@ tags$hr(),
 tags$h3("7. Check errors identified by app"),
 
 # Tell people what to do if there are errors
-tags$h5("Please fix the errors (solutions are provided with error message)
-        before uploading your data."),
-tags$h5("If necessary, fix your data in Excel and re-attach data to the app."),
+tags$h5("Please fix identified issues before uploading your data."),
+tags$h5("Edit and save the data on your computer then re-attach it (step 5)."),
 
 # Make tabs for each sheet of the data
 tabsetPanel(
@@ -319,7 +318,6 @@ tabsetPanel(
 # End with a horizontal line
 tags$hr(),
 
-
 ## ------------------------------ ##
     # UI: Authorized Email ####
 ## ------------------------------ ##
@@ -328,7 +326,7 @@ textInput(
   inputId = "auth_email",
   label = tags$h3("8. Enter GoogleDrive-Authorized Email"),
   placeholder = "me@gmail.com",
-  width = '65%'
+  width = '50%'
 ),
 
 # Note on email
@@ -359,31 +357,6 @@ tags$h5("Note that upload speed varies depending on internet speed & file size.
         A confirmation message will appear when upload is successful"),
 
 # Add a line for some breathing room at the bottom
-tags$hr(),
-
-## ------------------------------ ##
-# UI: Test Outputs ####
-## ------------------------------ ##
-# Give it a title
-tags$h3("Test Outputs"),
-
-# Explain the output
-tags$h5("This section is purely for diagnostic purposes;
-        As each portal version is created it is helpful to have spaces
-        to export inner workings for visualization"),
-
-# Spit out a table of selected options in the checkboxes
-tags$h5("Test Out 1"),
-tableOutput(outputId = "test_out1"),
-tags$h5("Test Out 2"),
-#DT::dataTableOutput(outputId = "test_out2"),
-verbatimTextOutput(outputId = 'test_out2'),
-tags$h5("Test Out 3"),
-verbatimTextOutput(outputId = 'test_out3'),
-tags$h5("Test Out 4"),
-verbatimTextOutput(outputId = 'test_out4'),
-
-# End with a horizontal line
 tags$hr()
 
 ## ----------------------------------------------- ##
@@ -455,51 +428,6 @@ meta <- reactive({
    "singleStage" = input$singleStage,
    "generalNotes" = input$miscNotes
   )
-})
-
-## ----------------------------------------------- ##
-         # S: Test Outputs Creation ####
-## ----------------------------------------------- ##
-# Test output 1
-note_test_reactive <- reactive({
-  as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
-                    sheet = "notes"))
-  })
-
-note_test_reactive_v2 <- reactive({
-  if(is.null(input$file_upload)) { return(NULL) } else {
-  as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
-                                  sheet = "notes")) }
-  
-})
-
-
-output$test_out1 <- renderTable({
-  note_test_reactive_v2()
-  })
-
-
-# Test output 2
-output$test_out2 <- renderPrint({
-  nrow(note_test_reactive_v2())
-})
-
-#output$test_out2 <- DT::renderDataTable({
-#  DT::datatable(
-#    data = meta(),
-#    rownames = F)
-#  })
-
-# output #3
-output$test_out3 <- renderPrint({
-  chosen_tabs()
-  })
-
-# Output #4
-output$test_out4 <- renderPrint({
-  for (i in 1:nrow(chosen_tabs())) {
-    print(as.character(chosen_tabs()[i, ]))
-  }
 })
 
 ## ----------------------------------------------- ##
@@ -595,7 +523,7 @@ error_msg.missing_index <- paste("At least one row is missing surveyID, plantSpe
 error_msg.empty_sheet <- paste("You've chosen to upload this sheet but no entries were detected.",
                                "Please do not upload blank Excel sheets", sep = ' ')
 
-# Message when no (other) errors are detected
+# Message when no (other) errors are detected in QA/QC portion
 green_light <- paste("No (other) errors detected; thank you for your diligence!")
 
 ## ----------------------------------------------- ##
@@ -699,7 +627,7 @@ output$site_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) } else {
     # (2) This tab isn't selected
     if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){
-      return(NULL) } else {
+      box_error } else {
       # If data are attached and checkbox is selected, check for issues
         rbind(
         ## Any missing values
@@ -730,8 +658,8 @@ output$site_chk <- renderTable({
 ## ------------------------------ ##
 output$dens_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
-  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "densityData")) == 0){ return(NULL) }
-    else {
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "densityData")) == 0){
+    box_error } else {
       rbind(
         # Any cells that would be coerced into numeric
         data.frame("Errors" = ifelse(is.na(as.numeric(dens_actual()$numPlantsPer_m2)),
@@ -754,8 +682,8 @@ output$dens_chk <- renderTable({
 ## ------------------------------ ##
 output$plant_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
-  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ return(NULL) }
-    else {
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){
+    box_error } else {
       rbind(
         # numLeaves/Herb missing data
         data.frame("Errors" = ifelse(
@@ -819,8 +747,8 @@ output$plant_chk <- renderTable({
 ## ------------------------------ ##
 output$repr_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
-  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){ return(NULL) }
-    else {
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){
+    box_error } else {
       rbind(
         # numRepro/Herb missing data
         data.frame("Errors" = ifelse(
@@ -861,8 +789,8 @@ output$repr_chk <- renderTable({
 ## ------------------------------ ##
 output$bug_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
-  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){ return(NULL) }
-    else {
+  else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){
+    return(box_error) } else {
       rbind(
         # insectUnit missing
         data.frame("Errors" = ifelse(test = is.na(bug_actual()$insectUnit),
@@ -922,7 +850,7 @@ bug_new_cols <- reactive({
             names(dplyr::select(bug_actual(), surveyID:notes))) }
 })
 
-# Actual checks
+# Actual check of data dictionary
 output$new_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ return(NULL) }
