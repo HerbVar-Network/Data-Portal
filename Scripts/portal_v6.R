@@ -381,31 +381,6 @@ tags$h5("After each file upload, click this button and repeat steps 1-9 for the 
 # And yet another warning that not everything will be reset
 tags$h5("Note that PI name, authorization email, and checkboxes are not reset by this button"),
 
-# Add a line for some breathing room at the bottom
-tags$hr(),
-
-## ------------------------------ ##
-      # UI: Test Outputs ####
-## ------------------------------ ##
-# Give it a title
-tags$h3("Test Outputs"),
-
-# Explain the output
-tags$h5("This section is purely for diagnostic purposes;
-        As each portal version is created it is helpful to have spaces
-        to export inner workings for visualization"),
-
-# Spit out a table of selected options in the checkboxes
-tags$h5("Test Out 1"),
-tableOutput(outputId = "test_out1"),
-tags$h5("Test Out 2"),
-#DT::dataTableOutput(outputId = "test_out2"),
-verbatimTextOutput(outputId = 'test_out2'),
-tags$h5("Test Out 3"),
-verbatimTextOutput(outputId = 'test_out3'),
-tags$h5("Test Out 4"),
-verbatimTextOutput(outputId = 'test_out4'),
-
 # End with a horizontal line
 tags$hr()
 
@@ -478,51 +453,6 @@ meta <- reactive({
    "singleStage" = input$singleStage,
    "generalNotes" = input$miscNotes
   )
-})
-
-## ----------------------------------------------- ##
-         # S: Test Outputs Creation ####
-## ----------------------------------------------- ##
-# Test output 1
-note_test_reactive <- reactive({
-  as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
-                    sheet = "notes"))
-  })
-
-note_test_reactive_v2 <- reactive({
-  if(is.null(input$file_upload)) { return(NULL) } else {
-  as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
-                                  sheet = "notes")) }
-  
-})
-
-
-output$test_out1 <- renderTable({
-  note_test_reactive_v2()
-  })
-
-
-# Test output 2
-output$test_out2 <- renderPrint({
-  nrow(note_test_reactive_v2())
-})
-
-#output$test_out2 <- DT::renderDataTable({
-#  DT::datatable(
-#    data = meta(),
-#    rownames = F)
-#  })
-
-# output #3
-output$test_out3 <- renderPrint({
-  chosen_tabs()
-  })
-
-# Output #4
-output$test_out4 <- renderPrint({
-  for (i in 1:nrow(chosen_tabs())) {
-    print(as.character(chosen_tabs()[i, ]))
-  }
 })
 
 ## ----------------------------------------------- ##
