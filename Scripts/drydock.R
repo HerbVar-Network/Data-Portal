@@ -208,8 +208,6 @@ c('siteData', 'densityData', 'plantData', 'reproData',
 #  ) %>%
 #  dplyr::filter(!is.na(Errors))
 
-
-
 ## ------------------------------ ##
    # QA/QC: siteData Checks ####
 ## ------------------------------ ##
@@ -330,57 +328,144 @@ rbind(
   dplyr::arrange(Errors)
 
 ## ------------------------------ ##
-# QA/QC: reproData Checks ####
+  # QA/QC: reproData Checks ####
 ## ------------------------------ ##
-# Error wishlist:
-## 1) 
-
 # Examine data
 head(reproData)
 
 # Check for errors
 rbind(
-  data.frame("Errors" = ifelse(test = , yes = , no = ))
-  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
+  # numRepro/Herb missing data
+  data.frame("Errors" = ifelse(
+    test = (is.na(reproData$numRepro) | is.na(reproData$numReproHerb)), 
+    yes = paste0("Plant '", reproData$plantID, 
+                 "' is missing numRepro or numReproHerb"),
+    no = NA))
+  # numReproHerb > numRepro
+  , data.frame("Errors" = ifelse(test = as.numeric(reproData$numReproHerb) > as.numeric(reproData$numRepro),
+                                 yes = paste0("Plant '", reproData$plantID, 
+                                              "' numReproHerb (# damaged repro units) ",
+                                              "is greater than numRepro (total repro units)"),
+                                 no = NA))
+    # Date incorrectly formatted
+  , data.frame("Errors" = ifelse(test = (nchar(reproData$date) != 9 & 
+                                           nchar(reproData$date) != 10),
+                                 yes = paste0("Plant '", reproData$plantID,
+                                              "' has an incorrectly formatted date. ",
+                                              "Please use yyyy.mm.dd format.",
+                                              "Be careful to use periods not slashes, ",
+                                              "this avoids Excel date issues"),
+                                 no = NA))
+  # Index columns missing
+  , data.frame("Errors" = ifelse(test = ( is.na(reproData$surveyID) |
+                                            is.na(reproData$plantSpecies) |
+                                            is.na(reproData$date) |
+                                            is.na(reproData$site) ),
+                                 yes = paste0("At least one row is missing surveyID,",
+                                              " plantSpecies, date, or site"),
+                                 no = NA))
 ) %>%
   dplyr::filter(!is.na(Errors)) %>%
+  unique() %>%
   dplyr::arrange(Errors)
 
 ## ------------------------------ ##
-# QA/QC: herbivoreData Checks ####
+ # QA/QC: herbivoreData Checks ####
 ## ------------------------------ ##
-# Error wishlist:
-## 1) 
-
 # Examine data
 head(herbivoreData)
 
 # Check for errors
 rbind(
-  data.frame("Errors" = ifelse(test = , yes = , no = ))
-  #, data.frame("Errors" = ifelse(test = , yes = , no = ))
+  # insectUnit missing
+  data.frame("Errors" = ifelse(test = is.na(herbivoreData$insectUnit),
+                               yes = paste0("Plant '", herbivoreData$plantID,
+                                            "' is missing insectUnit (should be ",
+                                            "either 'count' or 'presence/absence')"),
+                               no = NA))
+  # Date incorrectly formatted
+  , data.frame("Errors" = ifelse(test = (nchar(herbivoreData$date) != 9 & 
+                                           nchar(herbivoreData$date) != 10),
+                                 yes = paste0("Plant '", herbivoreData$plantID,
+                                              "' has an incorrectly formatted date. ",
+                                              "Please use yyyy.mm.dd format.",
+                                              "Be careful to use periods not slashes, ",
+                                              "this avoids Excel date issues"),
+                                 no = NA))
+  # Index columns missing
+  , data.frame("Errors" = ifelse(test = ( is.na(herbivoreData$surveyID) |
+                                            is.na(herbivoreData$plantSpecies) |
+                                            is.na(herbivoreData$date) |
+                                            is.na(herbivoreData$site) ),
+                                 yes = paste0("At least one row is missing surveyID,",
+                                              " plantSpecies, date, or site"),
+                                 no = NA))
 ) %>%
   dplyr::filter(!is.na(Errors)) %>%
+  unique() %>%
   dplyr::arrange(Errors)
 
 ## ------------------------------ ##
-# QA/QC: newColumns Checks ####
+  # QA/QC: newColumns Checks ####
 ## ------------------------------ ##
-# Error wishlist:
-## 1) 
-
 # Examine data
 head(newColumns)
 
+# Identify new columns in each sheet
+  ## Site data
+site_new <- setdiff(siteData$variable, c(siteData$variable[1:18], "NOTES TO DATA ENTERER:"))
+
+  ## Plant data
+plant_new_cols <- setdiff(names(plantData), names(dplyr::select(plantData, surveyID:percLf30)))
+
+  ## Repro data
+repro_new_cols <- setdiff(names(reproData), names(dplyr::select(reproData, surveyID:notes)))
+
+  ## Bug data
+bug_new_cols <- setdiff(names(herbivoreData), names(dplyr::select(herbivoreData, surveyID:notes)))
+
 # Check for errors
 rbind(
-  data.frame("Errors" = ifelse(test = , yes = , no = ))
+  # Any new entries anywhere
+  data.frame("Errors" = ifelse(test = (!is.na(setdiff(site_new, newColumns$variable)) |
+                                         !is.na(setdiff(plant_new_cols, newColumns$variable)) |
+                                         !is.na(setdiff(repro_new_cols, newColumns$variable)) |
+                                         !is.na(setdiff(bug_new_cols, newColumns$variable))),
+                               yes = paste0("New variables(s) added to sheet(s) but ",
+                                            "not defined in newColumns sheet. ",
+                                            "Please define all new columns there."),
+                               no = NA))
+  # New rows added to siteData tab
+  , data.frame("Errors" = ifelse(test = !is.na(setdiff(site_new, newColumns$variable)),
+                               yes = paste0("From siteData tab, ",
+                                            "Please define the following: ",
+                                            site_new),
+                               no = NA))
+  # New columns added to plantData
+  , data.frame("Errors" = ifelse(test = !is.na(setdiff(plant_new_cols, newColumns$variable)),
+                                 yes = paste0("From plantData tab, ",
+                                              "Please define the following: ",
+                                              plant_new_cols),
+                                 no = NA))
+  # New columns added to reproData
+  , data.frame("Errors" = ifelse(test = !is.na(setdiff(repro_new_cols, newColumns$variable)),
+                                 yes = paste0("From reproData tab, ",
+                                              "Please define the following: ",
+                                              repro_new_cols),
+                                 no = NA))
+  # New columns added to herbivoreData
+  , data.frame("Errors" = ifelse(test = !is.na(setdiff(bug_new_cols, newColumns$variable)),
+                                 yes = paste0("From herbivoreData tab, ",
+                                              "Please define the following: ",
+                                              bug_new_cols),
+                                 no = NA))
   #, data.frame("Errors" = ifelse(test = , yes = , no = ))
 ) %>%
-  dplyr::filter(!is.na(Errors))
+  dplyr::filter(!is.na(Errors)) %>%
+  unique()
 
 ## ------------------------------ ##
-# QA/QC: notes Checks ####
+    # QA/QC: notes Checks ####
 ## ------------------------------ ##
 # Error wishlist:
 ## 1) 
@@ -390,10 +475,22 @@ head(notes)
 
 # Check for errors
 rbind(
-  data.frame("Errors" = ifelse(test = , yes = , no = ))
-  #, data.frame("Errors" = )
+  data.frame("Errors" = ifelse(test = nrow(notes) == 0,
+                               yes = paste0("You've chosen to upload the notes sheet but",
+                                            " no entries are detected. Please do not upload",
+                                            " blank Excel sheets"),
+                               no = NA))
+  , data.frame("Errors" = ifelse(test = is.na(notes$globalNotes),
+                               yes = paste0("Empty rows detected, please consolidate", 
+                                            "your notes to avoid empty rows"),
+                               no = NA))
 ) %>%
-  dplyr::filter(!is.na(Errors))
+  dplyr::filter(!is.na(Errors)) %>%
+  unique()
+
+## ----------------------------------------------- ##
+# Creating and referencing a column in same pipe ####
+## ----------------------------------------------- ##
 
 # END ####
 
