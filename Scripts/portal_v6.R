@@ -6,7 +6,7 @@
   ## Retains the data preview tabs (see ver. 3)
   ## Retains harvesting of survey-level metadata (see ver. 4)
   ## Retains preliminary QA/QC of attached data (see ver. 5)
-  ## Should add reset button and *may* change authentication method
+  ## Adds reset button for most of the user inputs
 
 # Clear environment
 rm(list = ls())
@@ -114,8 +114,8 @@ textInput(
           
 # Note on site name
 tags$h5("Note: site name will be capped at 8 characters automatically",
-        tags$strong("for file name,"),
-        "but full name will also be retained, so be as detailed as needed"),
+        tags$strong("for the file name,"),
+        "but full name will also be retained elsewhere, so be as detailed as needed"),
           
 ## Sampling date
   ### Gets around possible issue of Name_Species_Site not being unique / survey
@@ -243,13 +243,10 @@ tags$hr(),
 ## ------------------------------ ##
      # UI: Data Checkboxes ####
 ## ------------------------------ ##
-# Prompt user to identify what data they collected
-tags$h3("4. Select which Excel sheets you want to upload"),
-
-# Actual checkbox creation
+# Checkboxes of the different tab options
 checkboxGroupInput(
   inputId = 'data_collected',
-  label = "Excel Tabs with Data",
+  label = tags$h3("4. Select which Excel sheets you want to upload"),
   choices = c("siteData", "densityData", "plantData", "reproData",
               "herbivoreData", "newColumns", "notes"),
   selected = c("siteData", "plantData"),
@@ -268,7 +265,8 @@ tags$hr(),
 # Provide a place for Excel file uploading
 fileInput(inputId = "file_upload",
           label = tags$h3("5. Attach Excel File"),
-          accept = ".xlsx"),
+          accept = ".xlsx",
+          width = '65%'),
 
 # Add a horizontal line
 tags$hr(),
@@ -302,7 +300,7 @@ tags$h3("7. Check errors identified by app"),
 
 # Tell people what to do if there are errors
 tags$h5("Please fix identified issues before uploading your data."),
-tags$h5("Edit and save the data on your computer then re-attach it (step 5)."),
+tags$h5("To make errors go away: edit and save the data on your computer then re-attach it (step 5)."),
 
 # Make tabs for each sheet of the data
 tabsetPanel(
@@ -357,11 +355,37 @@ verbatimTextOutput("upload_msg"),
 tags$h5("Note that upload speed varies depending on internet speed & file size.
         A confirmation message will appear when upload is successful"),
 
+# Add a line to divide this from below
+tags$hr(),
+
+## ------------------------------ ##
+      # UI: Reset Button ####
+## ------------------------------ ##
+# Provide heading for upload button
+tags$h3("10. Reset the App"),
+
+# Give a warning about clicking it to early
+tags$h5("WARNING: ", tags$strong("DO NOT"),
+        "click this before the sucessful upload message prints below the upload button."),
+
+# Button to upload data on click
+actionButton(inputId = "reset_button",
+             label = "Reset Inputs"),
+
+# After clicking the button, return the message created in the server
+verbatimTextOutput("reset_msg"),
+
+# And have a warning on timing
+tags$h5("After each file upload, click this button and repeat steps 1-9 for the next file"),
+
+# And yet another warning that not everything will be reset
+tags$h5("Note that PI name, authorization email, and checkboxes are not reset by this button"),
+
 # Add a line for some breathing room at the bottom
 tags$hr(),
 
 ## ------------------------------ ##
-# UI: Test Outputs ####
+      # UI: Test Outputs ####
 ## ------------------------------ ##
 # Give it a title
 tags$h3("Test Outputs"),
@@ -572,7 +596,7 @@ box_error <- data.frame("ALERT" = c("Sheet not selected for upload",
                                     "Check the box above if you want to upload"))
 
 # siteData box unchecked
-site_error <- data.frame("FATAL ERROR" = c("*This sheet is REQUIRED*",
+site_error <- data.frame("FATAL_ERROR" = c("*This sheet is REQUIRED*",
                                            "Please check the box above and",
                                            "ensure that this sheet is filled out"))
 
@@ -697,7 +721,7 @@ output$site_chk <- renderTable({
   # Return NULL if either (1) no data are attached OR
   if(is.null(input$file_upload)){ return(NULL) } else {
     # (2) This tab isn't selected
-    if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){ box_error }
+    if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){ site_error }
     else {
       # If data are attached and checkbox is selected, check for issues
         rbind(
@@ -1094,7 +1118,82 @@ upload_msg <- reactiveVal()
   
 # Produce any needed messages
 output$upload_msg <- renderText({upload_msg()})
-output$attach_msg <- renderText({attach_text1()})
+
+## ----------------------------------------------- ##
+                # S: Reset Button ####  
+## ----------------------------------------------- ##
+# If the button is clicked, do the stuff in the {} brackets
+observeEvent(input$reset_button, {
+  
+  # Reset all of the inputs up to this point
+    ## Genus
+  updateTextInput(inputId = "genus",
+                  value = NA,
+                  placeholder = "Plantago")
+    ## Species
+  updateTextInput(inputId = "sp",
+                  value = NA,
+                  placeholder = "major")
+    ## Site
+  updateTextInput(inputId = "site",
+                  value = NA,
+                  placeholder = "Site 1")
+    ## Date
+  updateDateInput(inputId = "date",
+                  value = NULL)
+    ## Common name
+  updateTextInput(inputId = "common",
+                  value = NA,
+                  placeholder = "broadleaf plantain")
+    ## Observers
+  updateTextInput(inputId = "helpers",
+                  value = NA,
+                  placeholder = "who helped collect these data?")
+    ## Foliage - simple
+  updateSelectInput(inputId = "flgSimp",
+                    choices = c("-", "Deciduous", "Evergreen", "Annual"),
+                    selected = "-")
+    ## Foliage - verbose
+  updateTextInput(inputId = "flgVerbose",
+                  value = NA,
+                  placeholder = "Semi-deciduous: loses 50% leaves in winter")
+    ## Native status
+  updateSelectInput(inputId = "native",
+                    choices = c("-", "Native", "Non-Native"),
+                    selected = "-")
+    ## Management status
+  updateSelectInput(inputId = "siteType",
+                    choices = c("-", "Natural", "Managed", "Cultivated"),
+                    selected = "-")
+    ## Single life stage
+  updateRadioButtons(inputId = "singleStage",
+                     choices = c("-", 'yes', 'no'),
+                     selected = "-")
+    ## Notes
+  updateTextInput(inputId = "miscNotes",
+                  value = NA,
+                  placeholder = "Any file-wide additional notes you'd like to provide")
+
+  # Also want to 'reset' (i.e., detach) the attached file
+  #fileData <- reactiveVal(data_files = NULL)
+  shinyjs::reset("file_upload")
+  
+  # Print successful reset message
+  reset_msg('App reset. Awaiting next file')
+
+  # Note that PI name (first and last), auhtorization email, and checkboxes are not reset
+  # It seems likely that users of the app who want a reset button would:
+    ## 1) be representing the same research team (so same PI file to file)
+    ## 2) be the same person (so same email for authorization)
+    ## 3) and have collected the same data (so checkboxes not reset)
+    
+})
+
+# Call reactive mssage
+reset_msg <- reactiveVal()
+
+# And send it to UI
+output$reset_msg <- renderText({reset_msg()})
 
 ## ----------------------------------------------- ##
         # S: Close Server Parentheses ####
