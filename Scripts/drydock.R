@@ -491,6 +491,27 @@ rbind(
 ## ----------------------------------------------- ##
 # Creating and referencing a column in same pipe ####
 ## ----------------------------------------------- ##
+# We want to create a column (easy) BUT
+  ## refer to that column (also easy)
+  ## IN THE SAME LOOP (potentially more difficult)
+
+# Make the test object
+test.pipe <- rbind(
+  data.frame("Errors" =
+               ifelse(is.na(siteData$datum)[1:19],
+                      yes = paste0("No entry detected for '",
+                                   siteData$variable,
+                                   "'. Please enter that value and re-attach data"),
+                      no = NA))
+  # , data.frame("Errors" = )
+  ) %>%
+  dplyr::mutate(Errors = as.character(Errors)) %>%
+  dplyr::filter(!is.na(Errors)) %>%
+  add_row(Errors = "No (other) errors detected; thank you for your diligence!")
+
+# Look at the result
+test.pipe
+
 
 # END ####
 
