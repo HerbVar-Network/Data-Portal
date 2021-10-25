@@ -562,15 +562,44 @@ notes_actual <- reactive({
 })
 
 ## ----------------------------------------------- ##
+     # S: Create Informative Error Messages ####  
+## ----------------------------------------------- ##
+# These are called later as needed
+
+# If data aren't attached
+attach_error <- data.frame("ALERT" = c("No data detected",
+                                       "Have you attached your Excel file?"))
+
+# Data are attached but a given sheet's box wasn't selected
+box_error <- data.frame("ALERT" = c("Sheet not selected for upload",
+                                    "Check the box above if you want to upload"))
+
+# siteData box unchecked
+site_error <- data.frame("FATAL ERROR" = c("*This sheet is REQUIRED*",
+                                           "Please check the box above and",
+                                           "ensure that this sheet is filled out"))
+
+# Date is incorrectly formatted
+error_msg.bad_date_format <- paste0("Date is incorrectly formatted in at least one row. ",
+                                    "Please use yyyy.mm.dd format. ",
+                                    "Be careful to use periods instead of slashes, ",
+                                    "this avoids Excel date issues")
+
+# Any new columns created but missing from newColumns sheet
+error_msg.missing_new_cols <- paste0("New variables(s) added to sheet(s) but ",
+                                     "not defined in newColumns sheet. ",
+                                     "Please define all new columns.")
+
+# Missing surveyID, plantSpecies, date, or site
+error_msg.missing_index <- paste0("At least one row is missing surveyID, plantSpecies, date, or site")
+
+# No data in sheet
+error_msg.empty_sheet <- paste("You've chosen to upload this sheet but no entries were detected.",
+                               "Please do not upload blank Excel sheets", sep = ' ')
+
+## ----------------------------------------------- ##
       # S: Create Tabs for Data PREVIEWS ####  
 ## ----------------------------------------------- ##
-# Make generic pseudo-error messages for the tabs when:
-  ## 1) The data haven't been attached
-attach_error <- data.frame("Alert" = c("No data detected",
-                                       "Have you attached your Excel file?"))
-  ## 2) The data were attached but a given sheet's box wasn't selected
-box_error <- data.frame("Alert" = c("Sheet not selected for upload",
-                                     "Check the box above if you want to upload"))
 # siteData tab - preview
 output$site_out <- DT::renderDataTable({
   # If no data are attached, return the attach error
@@ -579,9 +608,7 @@ output$site_out <- DT::renderDataTable({
     } else {
   # If they are attached but the sheet isn't selected in the chechboxes
   if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){
-    data.frame("**WARNING**" = c("*This sheet is required*",
-                             "Please check the box above and
-                             ensure that this sheet is filled out"))
+    site_error
     } else {
   # If data are attached and checkbox is selected, preview the table
   DT::datatable(data = site_actual(),
@@ -663,7 +690,9 @@ output$notes_out <- DT::renderDataTable({
 ## ----------------------------------------------- ##
         # S: Create Tabs for Data CHECKS ####  
 ## ----------------------------------------------- ##
-# siteData tab - check
+## ------------------------------ ##
+       # Check siteData ####
+## ------------------------------ ##
 output$site_chk <- renderTable({
   # Return NULL if either (1) no data are attached OR
   if(is.null(input$file_upload)){ return(NULL) } else {
@@ -674,7 +703,7 @@ output$site_chk <- renderTable({
         rbind(
         ## Any missing values
         data.frame("Errors" =
-                     ifelse(is.na(site_actual()$datum)[1:19],
+                     ifelse(is.na(site_actual()$datum)[1:18],
                             yes = paste0("No entry detected for '",
                                          site_actual()$variable, "'."),
                             no = NA))) %>%
@@ -686,12 +715,13 @@ output$site_chk <- renderTable({
 ## Note, the following do the same thing as the siteData tab
 ## So comments are excluded for brevity
 
-# densityData tab - check
+## ------------------------------ ##
+     # Check densityData ####
+## ------------------------------ ##
 output$dens_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "densityData")) == 0){ return(NULL) }
     else {
-      # Quality assurance and control (QA/QC)
       rbind(
         # Any cells that would be coerced into numeric
         data.frame("Errors" = ifelse(is.na(as.numeric(dens_actual()$numPlantsPer_m2)),
@@ -700,12 +730,15 @@ output$dens_chk <- renderTable({
                                                   "' contains a letter or special character. "),
                                      no = NA))
       ) %>%
-        dplyr::filter(!is.na(Errors))
+        dplyr::filter(!is.na(Errors)) %>%
+        unique()
       }
   }
 })
 
-# plantData tab - check
+## ------------------------------ ##
+      # Check plantData ####
+## ------------------------------ ##
 output$plant_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ return(NULL) }
@@ -744,60 +777,199 @@ output$plant_chk <- renderTable({
                                        yes = paste0("Plant '", plant_actual()$plantID, 
                                                     "' has a very small percHerbPlant, focal, or otherPlantCover (0 < x < 0.5).",
                                                     "Please check that you didn't enter a % in Excel (",
-                                                    "this would auto-convert to a true percent upon uploading)"),
+                                                    "this would auto-convert to a decimal upon uploading)"),
                                        no = NA))
         # Date incorrectly formatted
         , data.frame("Errors" = ifelse(test = (nchar(plant_actual()$date) != 9 & 
                                                  nchar(plant_actual()$date) != 10),
-                                       yes = paste0("Plant '", plant_actual()$plantID,
-                                                    "' has an incorrectly formatted date. ",
-                                                    "Please use yyyy.mm.dd format.",
-                                                    "Be careful to use periods not slashes, ",
-                                                    "this avoids Excel date issues"),
+                                       yes = error_msg.bad_date_format,
+                                       no = NA))
+        # Index columns missing
+        , data.frame("Errors" = ifelse(test = ( is.na(plant_actual()$surveyID) |
+                                                  is.na(plant_actual()$plantSpecies) |
+                                                  is.na(plant_actual()$date) |
+                                                  is.na(plant_actual()$site) ),
+                                       yes = error_msg.missing_index,
                                        no = NA))
       ) %>%
         dplyr::filter(!is.na(Errors)) %>%
+        unique() %>%
         dplyr::arrange(Errors)
       }
   }
 })
 
-# reproData - check
+## ------------------------------ ##
+       # Check reproData ####
+## ------------------------------ ##
 output$repr_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){ return(NULL) }
     else {
-      repr_actual()
+      rbind(
+        # numRepro/Herb missing data
+        data.frame("Errors" = ifelse(
+          test = (is.na(repr_actual()$numRepro) | is.na(repr_actual()$numReproHerb)), 
+          yes = paste0("Plant '", repr_actual()$plantID, 
+                       "' is missing numRepro or numReproHerb"),
+          no = NA))
+        # numReproHerb > numRepro
+        , data.frame("Errors" = ifelse(test = as.numeric(repr_actual()$numReproHerb) > as.numeric(repr_actual()$numRepro),
+                                       yes = paste0("Plant '", repr_actual()$plantID, 
+                                                    "' numReproHerb (# damaged repro units) ",
+                                                    "is greater than numRepro (total repro units)"),
+                                       no = NA))
+        # Date incorrectly formatted
+        , data.frame("Errors" = ifelse(test = (nchar(repr_actual()$date) != 9 & 
+                                                 nchar(repr_actual()$date) != 10),
+                                       yes = error_msg.bad_date_format,
+                                       no = NA))
+        # Index columns missing
+        , data.frame("Errors" = ifelse(test = ( is.na(repr_actual()$surveyID) |
+                                                  is.na(repr_actual()$plantSpecies) |
+                                                  is.na(repr_actual()$date) |
+                                                  is.na(repr_actual()$site) ),
+                                       yes = error_msg.missing_index,
+                                       no = NA))
+      ) %>%
+        dplyr::filter(!is.na(Errors)) %>%
+        unique() %>%
+        dplyr::arrange(Errors)
       }
   }
 })
 
-# herbivoreData - check
+## ------------------------------ ##
+     # Check herbivoreData ####
+## ------------------------------ ##
 output$bug_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){ return(NULL) }
     else {
-      bug_actual()
+      rbind(
+        # insectUnit missing
+        data.frame("Errors" = ifelse(test = is.na(bug_actual()$insectUnit),
+                                     yes = paste0("Plant '", bug_actual()$plantID,
+                                                  "' is missing insectUnit (should be ",
+                                                  "either 'count' or 'presence/absence')"),
+                                     no = NA))
+        # Date incorrectly formatted
+        , data.frame("Errors" = ifelse(test = (nchar(bug_actual()$date) != 9 & 
+                                                 nchar(bug_actual()$date) != 10),
+                                       yes = error_msg.bad_date_format,
+                                       no = NA))
+        # Index columns missing
+        , data.frame("Errors" = ifelse(test = ( is.na(bug_actual()$surveyID) |
+                                                  is.na(bug_actual()$plantSpecies) |
+                                                  is.na(bug_actual()$date) |
+                                                  is.na(bug_actual()$site) ),
+                                       yes = error_msg.missing_index,
+                                       no = NA))
+      ) %>%
+        dplyr::filter(!is.na(Errors)) %>%
+        unique() %>%
+        dplyr::arrange(Errors)
       }
   }
 })
 
-# newColumns - check
+## ------------------------------ ##
+      # Check newColumns ####
+## ------------------------------ ##
+# Identify new columns in all sheets where columns can be added
+  ## siteData new entries in "variable" column
+site_new <- reactive({
+  if(is.null(input$file_upload)) { return(NULL) } else {
+  setdiff(site_actual()$variable,
+          c(site_actual()$variable[1:18], "NOTES TO DATA ENTERER:")) }
+  })
+  ## plantData new columns
+plant_new_cols <- reactive({
+  if(is.null(input$file_upload)) { return(NULL) } else {
+  setdiff(names(plant_actual()),
+          names(dplyr::select(plant_actual(), surveyID:percLf30))) }
+  })
+
+  ## reproData new columns
+repro_new_cols <- reactive({
+  if(is.null(input$file_upload)) { return(NULL) } else {
+    setdiff(names(repr_actual()),
+            names(dplyr::select(repr_actual(), surveyID:notes))) }
+  })
+  ## herbivoreData new columns
+bug_new_cols <- reactive({
+  if(is.null(input$file_upload)) { return(NULL) } else {
+    setdiff(names(bug_actual()),
+            names(dplyr::select(bug_actual(), surveyID:notes))) }
+})
+
+# Actual checks
 output$new_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ return(NULL) }
     else {
-      new_actual()
+      rbind(
+        # Any new entries anywhere
+        data.frame("Errors" = ifelse(test = (!is.na(setdiff(site_new(),
+                                                            new_actual()$variable)) |
+                                               !is.na(setdiff(plant_new_cols(),
+                                                              new_actual()$variable)) |
+                                               !is.na(setdiff(repro_new_cols(),
+                                                              new_actual()$variable)) |
+                                               !is.na(setdiff(bug_new_cols(),
+                                                              new_actual()$variable))),
+                                     yes = error_msg.missing_new_cols,
+                                     no = NA))
+        # New rows added to siteData tab
+        , data.frame("Errors" = ifelse(test = !is.na(setdiff(site_new(),
+                                                             new_actual()$variable)),
+                                       yes = paste0("From siteData tab, ",
+                                                    "Please define ",
+                                                    site_new()),
+                                       no = NA))
+        # New columns added to plantData
+        , data.frame("Errors" = ifelse(test = !is.na(setdiff(plant_new_cols(),
+                                                             new_actual()$variable)),
+                                       yes = paste0("From plantData tab, ",
+                                                    "Please define ",
+                                                    plant_new_cols()),
+                                       no = NA))
+        # New columns added to reproData
+        , data.frame("Errors" = ifelse(test = !is.na(setdiff(repro_new_cols(),
+                                                             new_actual()$variable)),
+                                       yes = paste0("From reproData tab, ",
+                                                    "Please define ",
+                                                    repro_new_cols()),
+                                       no = NA))
+        # New columns added to herbivoreData
+        , data.frame("Errors" = ifelse(test = !is.na(setdiff(bug_new_cols(),
+                                                             new_actual()$variable)),
+                                       yes = paste0("From herbivoreData tab, ",
+                                                    "Please define ",
+                                                    bug_new_cols()),
+                                       no = NA))
+        #, data.frame("Errors" = ifelse(test = , yes = , no = ))
+      ) %>%
+        dplyr::filter(!is.na(Errors)) %>%
+        unique()
       }
   }
 })
 
-# Notes tab - check
+## ------------------------------ ##
+   # Check notes (the sheet) ####
+## ------------------------------ ##
 output$notes_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) }
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "notes")) == 0){ return(NULL) }
     else {
-      notes_actual()
+      rbind(
+        data.frame("Errors" = ifelse(test = nrow(notes_actual()) == 0,
+                                     yes = error_msg.empty_sheet,
+                                     no = NA))
+      ) %>%
+        dplyr::filter(!is.na(Errors)) %>%
+        unique()
       }
   }
 })
