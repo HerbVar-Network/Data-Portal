@@ -180,9 +180,7 @@ selectInput(
 ## Site type
 selectInput(
   inputId = "siteType",
-  label = tags$h4("What is the",
-                  tags$strong("management"),
-                  "status of the species at this site?"),
+  label = tags$h4("Species' Management Status (at your site)"),
   choices = c("-", "Natural", "Managed", "Cultivated")
 ),
 
@@ -717,7 +715,7 @@ output$site_chk <- renderTable({
           dplyr::mutate(Errors = as.character(Errors)) %>%
           # Add a row saying there are no (more) errors
             ## This row will be the only if there are no errors
-          add_row(Errors = green_light) %>%
+          dplyr::add_row(Errors = green_light) %>%
           # Remove duplicate rows (i.e., same issue across several rows)
           unique()
       }
@@ -745,7 +743,7 @@ output$dens_chk <- renderTable({
       ) %>%
         dplyr::filter(!is.na(Errors)) %>%
         dplyr::mutate(Errors = as.character(Errors)) %>%
-        add_row(Errors = green_light) %>%
+        dplyr::add_row(Errors = green_light) %>%
         unique()
       }
   }
@@ -811,7 +809,7 @@ output$plant_chk <- renderTable({
         dplyr::mutate(Errors = as.character(Errors)) %>%
         unique() %>%
         dplyr::arrange(Errors) %>%
-        add_row(Errors = green_light)
+        dplyr::add_row(Errors = green_light)
       }
   }
 })
@@ -853,7 +851,7 @@ output$repr_chk <- renderTable({
         dplyr::mutate(Errors = as.character(Errors)) %>%
         unique() %>%
         dplyr::arrange(Errors) %>%
-        add_row(Errors = green_light)
+        dplyr::add_row(Errors = green_light)
       }
   }
 })
@@ -889,7 +887,7 @@ output$bug_chk <- renderTable({
         dplyr::mutate(Errors = as.character(Errors)) %>%
         unique() %>%
         dplyr::arrange(Errors) %>%
-        add_row(Errors = green_light)
+        dplyr::add_row(Errors = green_light)
       }
   }
 })
@@ -975,7 +973,7 @@ output$new_chk <- renderTable({
         dplyr::mutate(Errors = as.character(Errors)) %>%
         unique() %>%
         dplyr::arrange(Errors) %>%
-        add_row(Errors = green_light)
+        dplyr::add_row(Errors = green_light)
       }
   }
 })
@@ -996,7 +994,7 @@ output$notes_chk <- renderTable({
         dplyr::mutate(Errors = as.character(Errors)) %>%
         unique() %>%
         dplyr::arrange(Errors) %>%
-        add_row(Errors = green_light)
+        dplyr::add_row(Errors = green_light)
       }
   }
 })
