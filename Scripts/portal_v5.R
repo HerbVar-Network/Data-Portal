@@ -580,22 +580,25 @@ site_error <- data.frame("FATAL ERROR" = c("*This sheet is REQUIRED*",
                                            "ensure that this sheet is filled out"))
 
 # Date is incorrectly formatted
-error_msg.bad_date_format <- paste0("Date is incorrectly formatted in at least one row. ",
-                                    "Please use yyyy.mm.dd format. ",
-                                    "Be careful to use periods instead of slashes, ",
-                                    "this avoids Excel date issues")
+error_msg.bad_date_format <- paste("Date is incorrectly formatted in at least one row.",
+                                    "Please use yyyy.mm.dd format.",
+                                    "Be careful to use periods instead of slashes,",
+                                    "this avoids Excel date issues", sep = ' ')
 
 # Any new columns created but missing from newColumns sheet
-error_msg.missing_new_cols <- paste0("New variables(s) added to sheet(s) but ",
-                                     "not defined in newColumns sheet. ",
-                                     "Please define all new columns.")
+error_msg.missing_new_cols <- paste("New variables(s) added to sheet(s) but",
+                                     "not defined in newColumns sheet.",
+                                     "Please define all new columns.", sep = ' ')
 
 # Missing surveyID, plantSpecies, date, or site
-error_msg.missing_index <- paste0("At least one row is missing surveyID, plantSpecies, date, or site")
+error_msg.missing_index <- paste("At least one row is missing surveyID, plantSpecies, date, or site")
 
 # No data in sheet
 error_msg.empty_sheet <- paste("You've chosen to upload this sheet but no entries were detected.",
                                "Please do not upload blank Excel sheets", sep = ' ')
+
+# Message when no (other) errors are detected
+green_light <- paste("No (other) errors detected; thank you for your diligence!")
 
 ## ----------------------------------------------- ##
       # S: Create Tabs for Data PREVIEWS ####  
@@ -706,8 +709,17 @@ output$site_chk <- renderTable({
                      ifelse(is.na(site_actual()$datum)[1:18],
                             yes = paste0("No entry detected for '",
                                          site_actual()$variable, "'."),
-                            no = NA))) %>%
-          dplyr::filter(!is.na(Errors))
+                            no = NA))
+        ) %>%
+          # Remove any NAs (i.e., rows without issues identified by ifelse())
+          dplyr::filter(!is.na(Errors)) %>%
+          # Make that column a character
+          dplyr::mutate(Errors = as.character(Errors)) %>%
+          # Add a row saying there are no (more) errors
+            ## This row will be the only if there are no errors
+          add_row(Errors = green_light) %>%
+          # Remove duplicate rows (i.e., same issue across several rows)
+          unique()
       }
     }
 })
@@ -727,10 +739,13 @@ output$dens_chk <- renderTable({
         data.frame("Errors" = ifelse(is.na(as.numeric(dens_actual()$numPlantsPer_m2)),
                                      yes = paste0("This entry '",
                                                   dens_actual()$numPlantsPer_m2,
-                                                  "' contains a letter or special character. "),
+                                                  "' contains a letter or special character ",
+                                                  "or is lacking any input"),
                                      no = NA))
       ) %>%
         dplyr::filter(!is.na(Errors)) %>%
+        dplyr::mutate(Errors = as.character(Errors)) %>%
+        add_row(Errors = green_light) %>%
         unique()
       }
   }
@@ -793,8 +808,10 @@ output$plant_chk <- renderTable({
                                        no = NA))
       ) %>%
         dplyr::filter(!is.na(Errors)) %>%
+        dplyr::mutate(Errors = as.character(Errors)) %>%
         unique() %>%
-        dplyr::arrange(Errors)
+        dplyr::arrange(Errors) %>%
+        add_row(Errors = green_light)
       }
   }
 })
@@ -833,8 +850,10 @@ output$repr_chk <- renderTable({
                                        no = NA))
       ) %>%
         dplyr::filter(!is.na(Errors)) %>%
+        dplyr::mutate(Errors = as.character(Errors)) %>%
         unique() %>%
-        dplyr::arrange(Errors)
+        dplyr::arrange(Errors) %>%
+        add_row(Errors = green_light)
       }
   }
 })
@@ -867,8 +886,10 @@ output$bug_chk <- renderTable({
                                        no = NA))
       ) %>%
         dplyr::filter(!is.na(Errors)) %>%
+        dplyr::mutate(Errors = as.character(Errors)) %>%
         unique() %>%
-        dplyr::arrange(Errors)
+        dplyr::arrange(Errors) %>%
+        add_row(Errors = green_light)
       }
   }
 })
@@ -951,7 +972,10 @@ output$new_chk <- renderTable({
         #, data.frame("Errors" = ifelse(test = , yes = , no = ))
       ) %>%
         dplyr::filter(!is.na(Errors)) %>%
-        unique()
+        dplyr::mutate(Errors = as.character(Errors)) %>%
+        unique() %>%
+        dplyr::arrange(Errors) %>%
+        add_row(Errors = green_light)
       }
   }
 })
@@ -969,7 +993,10 @@ output$notes_chk <- renderTable({
                                      no = NA))
       ) %>%
         dplyr::filter(!is.na(Errors)) %>%
-        unique()
+        dplyr::mutate(Errors = as.character(Errors)) %>%
+        unique() %>%
+        dplyr::arrange(Errors) %>%
+        add_row(Errors = green_light)
       }
   }
 })
