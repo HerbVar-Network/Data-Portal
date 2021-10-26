@@ -526,6 +526,21 @@ test.pipe <- rbind(
 # Look at the result
 test.pipe2
 
+## ----------------------------------------------- ##
+           # If else Clause Testing ####
+## ----------------------------------------------- ##
+# Having trouble getting the "if" part to do anything
+
+# Create dummy objects
+x <- NULL
+
+# Test against the simplest possible if/else code
+if (is.null(x)) {
+  print('if works')
+} else {
+  print('else works')
+}
+
 
 # END ####
 
