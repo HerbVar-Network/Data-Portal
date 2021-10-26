@@ -7,7 +7,7 @@
   ## Retains harvesting of survey-level metadata (see ver. 4)
   ## Retains preliminary QA/QC of attached data (see ver. 5)
   ## Retains reset button for most user inputs (see ver. 6)
-  ## Want to change authentication method for file upload
+  ## Now harvests which sheets are included with each upload
 
 # Clear environment
 rm(list = ls())
@@ -365,10 +365,6 @@ tags$hr(),
 # Provide heading for upload button
 tags$h3("10. Reset the App (if you're submitting >1 file)"),
 
-# Give a warning about clicking it to early
-tags$h5("WARNING: ", tags$strong("DO NOT"),
-        "click this before the sucessful upload message prints below the upload button."),
-
 # Button to upload data on click
 actionButton(inputId = "reset_button",
              label = "Reset Inputs"),
@@ -383,31 +379,6 @@ tags$h5("After each file upload, click this button and repeat steps 1-9 for the 
 tags$h5("Note that PI name, authorization email, and checkboxes are not reset by this button"),
 
 # Add a line for some breathing room at the bottom
-tags$hr(),
-
-## ------------------------------ ##
-      # UI: Test Outputs ####
-## ------------------------------ ##
-# Give it a title
-tags$h3("Test Outputs"),
-
-# Explain the output
-tags$h5("This section is purely for diagnostic purposes;
-        As each portal version is created it is helpful to have spaces
-        to export inner workings for visualization"),
-
-# Spit out a table of selected options in the checkboxes
-tags$h5("Test Out 1"),
-tableOutput(outputId = "test_out1"),
-tags$h5("Test Out 2"),
-#DT::dataTableOutput(outputId = "test_out2"),
-tableOutput(outputId = 'test_out2'),
-tags$h5("Test Out 3"),
-verbatimTextOutput(outputId = 'test_out3'),
-tags$h5("Test Out 4"),
-verbatimTextOutput(outputId = 'test_out4'),
-
-# End with a horizontal line
 tags$hr()
 
 ## ----------------------------------------------- ##
@@ -486,38 +457,6 @@ meta <- reactive({
    "newColumnsIncluded" = "newColumns" %in% chosen_tabs()$V1,
    "notesIncluded" = "notes" %in% chosen_tabs()$V1
   )
-})
-
-## ----------------------------------------------- ##
-         # S: Test Outputs Creation ####
-## ----------------------------------------------- ##
-# Test output 1
-output$test_out1 <- renderTable({
-  chosen_tabs()
-  })
-
-
-# Test output 2
-output$test_out2 <- renderTable({
-  meta()
-})
-
-#output$test_out2 <- DT::renderDataTable({
-#  DT::datatable(
-#    data = meta(),
-#    rownames = F)
-#  })
-
-# output #3
-output$test_out3 <- renderPrint({
-  chosen_tabs()
-  })
-
-# Output #4
-output$test_out4 <- renderPrint({
-  for (i in 1:nrow(chosen_tabs())) {
-    print(as.character(chosen_tabs()[i, ]))
-  }
 })
 
 ## ----------------------------------------------- ##
