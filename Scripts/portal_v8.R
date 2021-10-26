@@ -992,9 +992,9 @@ observeEvent(input$auth_button, {
   
   # If button pushed without email entered:
   if (is.null(input$auth_email)) {
-    return(NULL)
     # Make a failure message
     auth_msg('Please enter an email to authorize')
+    
   # Otherwise:
   } else {
     # Pre-emptively solve an issue with an HTTP2 error
