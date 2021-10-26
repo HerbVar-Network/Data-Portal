@@ -363,7 +363,7 @@ tags$hr(),
       # UI: Reset Button ####
 ## ------------------------------ ##
 # Provide heading for upload button
-tags$h3("10. Reset the App"),
+tags$h3("10. Reset the App (if you're submitting >1 file)"),
 
 # Give a warning about clicking it to early
 tags$h5("WARNING: ", tags$strong("DO NOT"),
@@ -401,7 +401,7 @@ tags$h5("Test Out 1"),
 tableOutput(outputId = "test_out1"),
 tags$h5("Test Out 2"),
 #DT::dataTableOutput(outputId = "test_out2"),
-verbatimTextOutput(outputId = 'test_out2'),
+tableOutput(outputId = 'test_out2'),
 tags$h5("Test Out 3"),
 verbatimTextOutput(outputId = 'test_out3'),
 tags$h5("Test Out 4"),
@@ -477,7 +477,14 @@ meta <- reactive({
    "nativeStatus" = input$native,
    "siteType" = input$siteType,
    "singleStage" = input$singleStage,
-   "generalNotes" = input$miscNotes
+   "generalNotes" = input$miscNotes,
+   "siteDataIncluded" = "siteData" %in% chosen_tabs()$V1,
+   "densityDataIncluded" = "densityData" %in% chosen_tabs()$V1,
+   "plantDataIncluded" = "plantData" %in% chosen_tabs()$V1,
+   "reproDataIncluded" = "reproData" %in% chosen_tabs()$V1,
+   "herbivoreDataIncluded" = "herbivoreData" %in% chosen_tabs()$V1,
+   "newColumnsIncluded" = "newColumns" %in% chosen_tabs()$V1,
+   "notesIncluded" = "notes" %in% chosen_tabs()$V1
   )
 })
 
@@ -485,27 +492,14 @@ meta <- reactive({
          # S: Test Outputs Creation ####
 ## ----------------------------------------------- ##
 # Test output 1
-note_test_reactive <- reactive({
-  as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
-                    sheet = "notes"))
-  })
-
-note_test_reactive_v2 <- reactive({
-  if(is.null(input$file_upload)) { return(NULL) } else {
-  as.data.frame(readxl::read_xlsx(path = input$file_upload$datapath,
-                                  sheet = "notes")) }
-  
-})
-
-
 output$test_out1 <- renderTable({
-  note_test_reactive_v2()
+  chosen_tabs()
   })
 
 
 # Test output 2
-output$test_out2 <- renderPrint({
-  nrow(note_test_reactive_v2())
+output$test_out2 <- renderTable({
+  meta()
 })
 
 #output$test_out2 <- DT::renderDataTable({
