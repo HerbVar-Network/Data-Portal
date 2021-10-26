@@ -8,8 +8,9 @@
   ## Retains preliminary QA/QC of attached data (see ver. 5)
   ## Retains reset button for most user inputs (s ee ver. 6)
   ## Retains harvesting of which sheets are uploaded (see ver. 7)
-  ## Finalizes upload location in Google Drive
-    ### May serve other purposes too...
+  ## Performs several new functions
+    ### Finalizes upload location in Google Drive
+    ### Provides 'authorize my email' button
 
 # Clear environment
 rm(list = ls())
