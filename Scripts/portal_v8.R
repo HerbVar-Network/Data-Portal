@@ -6,7 +6,7 @@
   ## Retains the data preview tabs (see ver. 3)
   ## Retains harvesting of survey-level metadata (see ver. 4)
   ## Retains preliminary QA/QC of attached data (see ver. 5)
-  ## Retains reset button for most user inputs (see ver. 6)
+  ## Retains reset button for most user inputs (s ee ver. 6)
   ## Retains harvesting of which sheets are uploaded (see ver. 7)
   ## Finalizes upload location in Google Drive
     ### May serve other purposes too...
@@ -321,22 +321,40 @@ tabsetPanel(
 tags$hr(),
 
 ## ------------------------------ ##
-    # UI: Authorized Email ####
+ # UI: Authorize Email / Button ####
 ## ------------------------------ ##
+# Heading for this section
+tags$h3("8. Enter & Authorize Email"),
+
+# Note on this section
+tags$h5("This app uploads your data to GoogleDrive through R. Because of this, you need to:"),
+tags$h5(tags$strong("1) Enter an email with access to",
+                    tags$a(href = "https://drive.google.com/drive/u/3/folders/1WMgV2n3GF1jKqbkCqWN1O7EnQ23hWu43",
+                           "this GoogleDrive folder"))),
+tags$h5(tags$strong("2) Authorize R to save your data to that folder")),
+tags$br(),
+
 # Request email
 textInput(
   inputId = "auth_email",
-  label = tags$h3("8. Enter GoogleDrive-Authorized Email"),
+  label = "Email Address",
   placeholder = "me@gmail.com",
   width = '50%'
 ),
 
-# Note on email
-tags$h5("This app uploads your data to GoogleDrive.
-        Because of this,",
-        tags$strong("you need to enter an email with access to",
-                    tags$a(href = "https://drive.google.com/drive/folders/1YiQqcrQwlbDyxghVdQwxbTDv919oBuSY?usp=sharing",
-                           "this GoogleDrive folder"))),
+# Button to authorize email on click
+actionButton(inputId = "auth_button",
+             label = "Authorize my Email"),
+
+# After clicking the button, return the message created in the server
+verbatimTextOutput("auth_msg"),
+
+# Note on this section
+tags$h5("This button triggers 2 browser pop-ups."),
+tags$h5(tags$strong("Check the box on both, click continue, and return to the app")),
+tags$h5("If desired, check out", tags$a(href = "https://docs.google.com/document/d/1qDq_tII_3ARfYyHe_fKx2z15p7VtK7G2ydBxgopp1NY/edit?usp=sharing",
+                                        "this tutorial"),
+        "for a step-by-step guide and more information"),
 
 # Add a horizontal line
 tags$hr(),
@@ -458,7 +476,7 @@ chosen_tabs <- reactive({
   })
 
 ## ----------------------------------------------- ##
-       # Collect Bonus Survey Metadata ####
+       # S: Collect Bonus Survey Metadata ####
 ## ----------------------------------------------- ##
 # Collect all of the entered info in a reactive dataframe
 meta <- reactive({
@@ -1020,6 +1038,40 @@ output$notes_chk <- renderTable({
 })
 
 ## ----------------------------------------------- ##
+         # S: 'Authorize Email' Button ####  
+## ----------------------------------------------- ##
+# If the authorize email button is clicked
+observeEvent(input$auth_button, {
+  
+  # Require an input for the email
+  req(input$auth_email)
+  
+  # If button pushed without email entered:
+  if (is.null(input$auth_email)) {
+    return(NULL)
+    # Make a failure message
+    auth_msg('Please enter an email to authorize')
+  # Otherwise:
+  } else {
+    # Pre-emptively solve an issue with an HTTP2 error
+    httr::set_config(httr::config(http_version = 0))
+    
+    # Authorize GoogleDrive and GoogleSheets with the provided email
+    googledrive::drive_auth(email = input$auth_email)
+    googlesheets4::gs4_auth(email = input$auth_email)
+    
+    # Print a success message
+    auth_msg('Email authorized, thank you!')
+  }
+})
+
+# Make whichever message was created reactive
+auth_msg <- reactiveVal()
+
+# Produce the appropriate message
+output$auth_msg <- renderText({auth_msg()})
+
+## ----------------------------------------------- ##
            # S: 'Upload Data' Button ####  
 ## ----------------------------------------------- ##
 # If the button is clicked, do the stuff in the {} brackets
@@ -1041,6 +1093,7 @@ if(is.null(input$file_upload))
     easyClose = T,
     footer = NULL
     ))
+  
 # Message when push upload button without attaching a data file
   upload_msg('Please attach a file')
 
@@ -1080,21 +1133,20 @@ httr::set_config(httr::config(http_version = 0))
 
 # Authorize GoogleDrive and GoogleSheets with the provided email
 googledrive::drive_auth(email = input$auth_email)
-gs4_auth(email = input$auth_email)
+googlesheets4::gs4_auth(email = input$auth_email)
 
 # Loop to save the data from the list
 for (i in 1:length(data_files)) {
   # Create a GoogleSheet of each datafile
-  gs4_create(name = paste0(surveyID(), "_",
+  googlesheets4::gs4_create(name = paste0(surveyID(), "_",
                            names(data_files)[i]),
              sheets = data_files[i])
   
   # Move each one to the pre-specified correct folder
-  drive_mv(file = paste0(surveyID(), "_",
+  googledrive::drive_mv(file = paste0(surveyID(), "_",
                          names(data_files)[i]),
-           path = "HerbVar Phase II Data - All Uploads/App Test Area/")
-
-}
+           path = "App Uploads - Phase 2/")
+  }
 
 ## ------------------------------ ##
   # S: Save Entered Metadata ####
