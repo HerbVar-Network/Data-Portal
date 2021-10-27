@@ -322,18 +322,19 @@ tabsetPanel(
 tags$hr(),
 
 ## ------------------------------ ##
- # UI: Authorize Email / Button ####
+     # UI: Provide Email ####
 ## ------------------------------ ##
 # Heading for this section
-tags$h3("8. Enter & Authorize Email"),
+tags$h3("8. Enter Email"),
 
 # Note on this section
-tags$h5("This app uploads your data to GoogleDrive through R. Because of this, you need to:"),
-tags$h5(tags$strong("1) Enter an email with access to",
-                    tags$a(href = "https://drive.google.com/drive/u/3/folders/1WMgV2n3GF1jKqbkCqWN1O7EnQ23hWu43",
-                           "this GoogleDrive folder"))),
-tags$h5(tags$strong("2) Authorize R to save your data to that folder")),
-tags$br(),
+tags$h5("This app uploads your data to GoogleDrive through R."),
+h5("Because of this, you need to enter an email with access to",
+   tags$a(href = "https://drive.google.com/drive/u/3/folders/1WMgV2n3GF1jKqbkCqWN1O7EnQ23hWu43",
+          "this GoogleDrive folder"),
+   " and ",
+   tags$a(href = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKhWYkt3MeWUFYu2LugHRHE6Q/edit#gid=0",
+          "this GoogleSheet")),
 
 # Request email
 textInput(
@@ -343,6 +344,18 @@ textInput(
   width = '50%'
 ),
 
+# Line break
+tags$hr(),
+
+## ------------------------------ ##
+  # UI: Authorization Button ####
+## ------------------------------ ##
+# Heading for this section
+tags$h3("9. Authorize Email"),
+
+# Explanation
+tags$h5("Now you need to authorize that email to interact with R."),
+
 # Button to authorize email on click
 actionButton(inputId = "auth_button",
              label = "Authorize my Email"),
@@ -351,11 +364,10 @@ actionButton(inputId = "auth_button",
 verbatimTextOutput("auth_msg"),
 
 # Note on this section
-tags$h5("This button triggers 2 browser pop-ups."),
-tags$h5(tags$strong("Check the box on both, click continue, and return to the app")),
-tags$h5("If desired, check out", tags$a(href = "https://docs.google.com/document/d/1qDq_tII_3ARfYyHe_fKx2z15p7VtK7G2ydBxgopp1NY/edit?usp=sharing",
-                                        "this tutorial"),
-        "for a step-by-step guide and more information"),
+tags$h5("This button triggers 2 browser pop-ups. Use",
+        tags$a(href = "https://docs.google.com/document/d/1qDq_tII_3ARfYyHe_fKx2z15p7VtK7G2ydBxgopp1NY/edit?usp=sharing",
+               "this tutorial"),
+        "for assistance."),
 
 # Add a horizontal line
 tags$hr(),
@@ -364,7 +376,7 @@ tags$hr(),
       # UI: Upload Button ####
 ## ------------------------------ ##
 # Provide heading for upload button
-tags$h3("9. Upload data!"),
+tags$h3("10. Upload data!"),
 
 # Button to upload data on click
 actionButton(inputId = "upload_button",
@@ -384,11 +396,7 @@ tags$hr(),
       # UI: Reset Button ####
 ## ------------------------------ ##
 # Provide heading for upload button
-tags$h3("10. Reset the App (if you're submitting >1 file)"),
-
-# Give a warning about clicking it to early
-tags$h5("WARNING: ", tags$strong("DO NOT"),
-        "click this before the sucessful upload message prints below the upload button."),
+tags$h3("11. Reset the App (if you're submitting >1 file)"),
 
 # Button to upload data on click
 actionButton(inputId = "reset_button",
@@ -398,7 +406,7 @@ actionButton(inputId = "reset_button",
 verbatimTextOutput("reset_msg"),
 
 # And have a warning on timing
-tags$h5("After each file upload, click this button and repeat steps 1-9 for the next file"),
+tags$h5("After each file upload, click this button and repeat steps 1-10 for the next file"),
 
 # And yet another warning that not everything will be reset
 tags$h5("Note that PI name, authorization email, and checkboxes are not reset by this button"),
@@ -1113,7 +1121,7 @@ upload_msg <- reactiveVal()
 output$upload_msg <- renderText({upload_msg()})
 
 ## ----------------------------------------------- ##
-                # S: Reset Button ####  
+              # S: 'Reset' Button ####  
 ## ----------------------------------------------- ##
 # If the button is clicked, do the stuff in the {} brackets
 observeEvent(input$reset_button, {
