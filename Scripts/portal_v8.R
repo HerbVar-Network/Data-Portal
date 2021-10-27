@@ -44,10 +44,9 @@ tags$h4("This Shiny App handles data submission for the Herbivory Variability Ne
 tags$hr(),
 
 # Remind users they must use the template datafile
-tags$h4("You", tags$strong("must"),
-        "use the template file provided ",
-        tags$a(href = "http://herbvar.org/protocols.html",
-               "here.")),
+tags$h4(tags$strong("This portal only accepts data entered into the template file",
+                    tags$a(href = "http://herbvar.org/protocols.html",
+                           "(provided here)."))),
 
 # And instruct them on the use of the app
 tags$h4("Please follow the numbered steps to upload your data successfully."),
@@ -78,7 +77,7 @@ tags$h5("The following information is required to give a unique name to your dat
           
 # Add a warning about underscores
 tags$h5("Please", tags$strong("DO NOT"),
-        "use underscores ('_') in your entries"),
+        "use underscores ( _ ) in your entries."),
 
 # We need the following to uniquely name the file users submit:
   ## PI last name
@@ -119,7 +118,8 @@ textInput(
 # Note on site name
 tags$h5("Note: site name will be capped at 8 characters automatically",
         tags$strong("for the file name,"),
-        "but full name will also be retained elsewhere, so be as detailed as needed"),
+        "but full name will also be retained elsewhere,",
+        "so be as detailed as needed."),
           
 ## Sampling date
   ### Gets around possible issue of Name_Species_Site not being unique / survey
@@ -159,7 +159,7 @@ textInput(
   placeholder = "R Carson; C Darwin"
 ),
 
-tags$h5("Please separate observers with a semicolon (';')"),
+tags$h5("Please separate observers with a semicolon ( ; )."),
 
 ## Foliage type - simple
 selectInput(
@@ -194,12 +194,24 @@ radioButtons(
   inputId = "singleStage",
   label = tags$h4("Did you record",
                   tags$strong("only a single"),
-                  "lifestage of plant"),
+                  "lifestage of plant?"),
   choices = c("-", 'yes', 'no')
 ),
 
 # Explanation
 tags$h5("E.g., Only surveyed flowering plants, or only seedlings, etc."),
+
+## Did you look for herbivores?
+radioButtons(
+  inputId = "bugsCounted",
+  label = tags$h4("Did you look for herbivores?"),
+  choices = c("-", 'yes', 'no')
+),
+
+# Explanation
+h5("If you are not uploading herbivore data,",
+   " this helps us to know whether you didn't survey herbivores or",
+   "did survey them but didn't find any."),
 
 ## General notes
 textInput(
@@ -213,7 +225,7 @@ textInput(
 ## ------------------------------ ##
 # Closing out notes
 tags$h5(tags$strong("Thank you for entering this pre-submission information!")),
-tags$h5("Please proceed to the main panel on the right"),
+tags$h5("Please proceed to the main panel on the right."),
 
 ## ----------------------------------------------- ##
            # UI: Main Panel Contents ####
@@ -239,7 +251,7 @@ verbatimTextOutput(outputId = "fileID",
                   
 # And explain that is what it's doing
 tags$h5("Does the above look correct as a file name for your survey?",
-        tags$strong("If not,"), "edit your inputs to the left"),
+        tags$strong("If not,"), "edit your inputs to the left."),
                   
 # Add a horizontal line
 tags$hr(),
@@ -328,13 +340,14 @@ tags$hr(),
 tags$h3("8. Enter Email"),
 
 # Note on this section
-tags$h5("This app uploads your data to GoogleDrive through R."),
-h5("Because of this, you need to enter an email with access to",
+tags$h5("This app uploads your data to GoogleDrive through R",
+        "so it requires  an email with access to",
+   tags$strong(" BOTH "),
    tags$a(href = "https://drive.google.com/drive/u/3/folders/1WMgV2n3GF1jKqbkCqWN1O7EnQ23hWu43",
           "this GoogleDrive folder"),
-   " and ",
+   tags$strong(" AND "),
    tags$a(href = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKhWYkt3MeWUFYu2LugHRHE6Q/edit#gid=0",
-          "this GoogleSheet")),
+          "this GoogleSheet.")),
 
 # Request email
 textInput(
@@ -354,7 +367,7 @@ tags$hr(),
 tags$h3("9. Authorize Email"),
 
 # Explanation
-tags$h5("Now you need to authorize that email to interact with R."),
+tags$h5("Now you need to authorize the above email to interact with R."),
 
 # Button to authorize email on click
 actionButton(inputId = "auth_button",
@@ -386,8 +399,7 @@ actionButton(inputId = "upload_button",
 verbatimTextOutput("upload_msg"),
 
 # And have a warning on timing
-tags$h5("Note that upload speed varies depending on internet speed & file size.
-        A confirmation message will appear when upload is successful"),
+tags$h5("A confirmation message will appear when upload is successful."),
 
 # Add a line to divide this from below
 tags$hr(),
@@ -396,7 +408,7 @@ tags$hr(),
       # UI: Reset Button ####
 ## ------------------------------ ##
 # Provide heading for upload button
-tags$h3("11. Reset the App (if you're submitting >1 file)"),
+tags$h3("11. Reset the App (Optional)"),
 
 # Button to upload data on click
 actionButton(inputId = "reset_button",
@@ -405,11 +417,11 @@ actionButton(inputId = "reset_button",
 # After clicking the button, return the message created in the server
 verbatimTextOutput("reset_msg"),
 
-# And have a warning on timing
-tags$h5("After each file upload, click this button and repeat steps 1-10 for the next file"),
-
-# And yet another warning that not everything will be reset
-tags$h5("Note that PI name, authorization email, and checkboxes are not reset by this button"),
+# And add some explanation
+tags$h5("This button resets everything",
+        tags$strong("except for"),
+        "PI name, email, and checkboxes."),
+tags$h5("It is intended as an optional convenience for entering multiple Excel files."),
 
 # Add a line for some breathing room at the bottom
 tags$hr()
@@ -481,6 +493,7 @@ meta <- reactive({
    "nativeStatus" = input$native,
    "siteType" = input$siteType,
    "singleStage" = input$singleStage,
+   "herbivoresLookedFor" = input$bugsCounted,
    "generalNotes" = input$miscNotes,
    "siteDataIncluded" = "siteData" %in% chosen_tabs()$V1,
    "densityDataIncluded" = "densityData" %in% chosen_tabs()$V1,
