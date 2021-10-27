@@ -1183,6 +1183,10 @@ observeEvent(input$reset_button, {
   updateRadioButtons(inputId = "singleStage",
                      choices = c("-", 'yes', 'no'),
                      selected = "-")
+    ## Herbivores looked for
+  updateRadioButtons(inputId = "bugsCounted",
+                     choices = c("-", 'yes', 'no'),
+                     selected = "-")
     ## Notes
   updateTextInput(inputId = "miscNotes",
                   value = NA,
