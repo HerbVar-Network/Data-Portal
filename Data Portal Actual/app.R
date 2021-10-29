@@ -1017,8 +1017,11 @@ observeEvent(input$auth_button, {
   
   # If button pushed without required information
   if (is.null(input$json_attach)) {
+    
     # Make a failure message
-    auth_msg('No .json file detected. Please attach the correct file')
+    output$auth_msg <- renderPrint({
+      'No .json file detected. Please attach the correct file.'
+      })
     
   # Otherwise:
   } else {
@@ -1034,15 +1037,11 @@ observeEvent(input$auth_button, {
              path = input$json_attach$datapath)
     
     # Print a success message
-    auth_msg('Access granted. Please continue to file upload.')
+    output$auth_msg <- renderPrint({
+      'Access granted. Please continue to file upload.'
+      })
   }
 })
-
-# Make whichever message was created reactive
-auth_msg <- reactiveVal()
-
-# Produce the appropriate message
-output$auth_msg <- renderText({auth_msg()})
 
 ## ----------------------------------------------- ##
           #S: 'Upload Data' Button ####  
@@ -1056,16 +1055,11 @@ observeEvent(input$upload_button, {
 # If the upload button is clicked but no data are attached:
 if(is.null(input$file_upload))
   {
-  # Generates pop-up warning
-  showModal(modalDialog(
-    title = "Error: Missing Data",
-    paste0("No file selected to upload."),
-    easyClose = T,
-    footer = NULL
-    ))
   
-# Message when push upload button without attaching a data file
-  upload_msg('No file detected. Please attach a file')
+  # Message when push upload button without attaching a data file
+    output$upload_msg <- renderPrint({
+      'No file detected. Please attach a file'
+      })
 
 ## ------------------------------ ##
  # S: Button Pushed with Data ####
@@ -1123,16 +1117,15 @@ sheet_append(ss = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKh
              sheet = "completedSurveys")
 
 # Successful upload message
-upload_msg('Data uploaded. Thank you!')
+output$upload_msg <- renderPrint({
+  'Data uploaded. Thank you!'
+})
+
 }
   })
   
 # Call any remaining reactive values
 fileData <- reactiveVal()
-upload_msg <- reactiveVal()
-  
-# Produce any needed messages
-output$upload_msg <- renderText({ upload_msg() })
 
 ## ----------------------------------------------- ##
               # S: 'Reset' Button ####  
