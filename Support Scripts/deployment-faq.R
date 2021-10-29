@@ -32,12 +32,10 @@ rsconnect::showLogs(appPath = 'Data Portal Actual/',
            # Changing Configuration ####
 ## ----------------------------------------------- ##
 # If the app needs to be changed to larger that can be done
-#rsconnect::configureApp(appDir = 'Data Portal Actual/',
-#                        size = 'medium',
-#                        redeploy = T)
   ## This feels dangerous though so it's commented out
 
-
-
+#rsconnect::configureApp(appDir = 'Data Portal Actual/',
+#                        size = 'large',
+#                        redeploy = T)
 
 # END ####
