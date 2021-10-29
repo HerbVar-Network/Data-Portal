@@ -10,12 +10,10 @@
   ## Adds harvesting of which sheets are attached (see ver. 7)
   ## Streamlines explanation formatting and adds 'authorize email' button
 
-# Clear environment
-rm(list = ls())
-
 # Call any needed libraries
 library(shiny); library(stringr); library(readxl)
 library(googlesheets4); library(googledrive); library(DT)
+library(gargle); library(googleAuthR)
 
 ## --------------------------------------------------------------------- ##
                           # User Interface (UI) ####
@@ -338,18 +336,11 @@ tags$hr(),
 tags$h3("8. Enter Email"),
 
 # Note on this section
-tags$h5("This app uploads your data to GoogleDrive through R",
-        "so it requires  an email with access to",
-   tags$strong(" BOTH "),
-   tags$a(href = "https://drive.google.com/drive/u/3/folders/1WMgV2n3GF1jKqbkCqWN1O7EnQ23hWu43",
-          "this GoogleDrive folder"),
-   tags$strong(" AND "),
-   tags$a(href = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKhWYkt3MeWUFYu2LugHRHE6Q/edit#gid=0",
-          "this GoogleSheet.")),
+tags$h5("What email should be contacted if there are questions about the data?"),
 
 # Request email
 textInput(
-  inputId = "auth_email",
+  inputId = "user_email",
   label = "Email Address",
   placeholder = "me@gmail.com",
   width = '50%'
@@ -359,26 +350,44 @@ textInput(
 tags$hr(),
 
 ## ------------------------------ ##
+  # UI: Authorization Inputs ####
+## ------------------------------ ##
+# Provide a place for JSON key attachment
+fileInput(inputId = "json_attach",
+          label = tags$h3("9. Attach .JSON File"),
+          width = '65%'),
+
+# Note on this section
+tags$h5("A .json file is essentially a software key that the app requires to run"),
+tags$h5("HerbVar Members can find the key in the Shared Google Drive", 
+        tags$a(href = "https://drive.google.com/drive/u/3/folders/0AExhXNVDxZHgUk9PVA",
+               "here.")),
+
+tags$h5("NOTE: THE ABOVE LINK IS NOT CORRECT BUT WILL BE BEFORE FINAL DEPLOYMENT"),
+
+tags$h5("Not a member but want to become one in order to submit data?
+        See guidelines for becoming a member",
+        tags$a(href = "http://herbvar.org/participation.html",
+               "here")),
+
+# Add a horizontal line
+tags$hr(),
+
+## ------------------------------ ##
   # UI: Authorization Button ####
 ## ------------------------------ ##
 # Heading for this section
-tags$h3("9. Authorize Email"),
+tags$h3("10. Authorize App"),
 
 # Explanation
-tags$h5("Now you need to authorize the above email to interact with R."),
+tags$h5("Attach the .json file, then click this button to tell the app to use it"),
 
 # Button to authorize email on click
 actionButton(inputId = "auth_button",
-             label = "Authorize my Email"),
+             label = "Authorize"),
 
 # After clicking the button, return the message created in the server
 verbatimTextOutput("auth_msg"),
-
-# Note on this section
-tags$h5("This button triggers 2 browser pop-ups. Use",
-        tags$a(href = "https://docs.google.com/document/d/1qDq_tII_3ARfYyHe_fKx2z15p7VtK7G2ydBxgopp1NY/edit?usp=sharing",
-               "this tutorial"),
-        "for assistance."),
 
 # Add a horizontal line
 tags$hr(),
@@ -387,7 +396,7 @@ tags$hr(),
       # UI: Upload Button ####
 ## ------------------------------ ##
 # Provide heading for upload button
-tags$h3("10. Upload data!"),
+tags$h3("11. Upload data!"),
 
 # Button to upload data on click
 actionButton(inputId = "upload_button",
@@ -406,7 +415,7 @@ tags$hr(),
       # UI: Reset Button ####
 ## ------------------------------ ##
 # Provide heading for upload button
-tags$h3("11. Reset the App (Optional)"),
+tags$h3("12. Reset the App (Optional)"),
 
 # Button to upload data on click
 actionButton(inputId = "reset_button",
@@ -476,7 +485,7 @@ chosen_tabs <- reactive({
 meta <- reactive({
   data.frame(
    "fileName" = surveyID(),
-   "portalUser" = input$auth_email,
+   "portalUser" = input$user_email,
    "PI_lastName" = input$pi_last,
    "PI_firstName" = input$pi_first,
    "plantGenus" = input$genus,
@@ -1001,30 +1010,31 @@ output$notes_chk <- renderTable({
 })
 
 ## ----------------------------------------------- ##
-         # S: 'Authorize Email' Button ####  
+           # S: 'Authorize' Button ####  
 ## ----------------------------------------------- ##
-# If the authorize email button is clicked
+# If the authorize button is clicked
 observeEvent(input$auth_button, {
   
-  # Require an input for the email
-  req(input$auth_email)
-  
-  # If button pushed without email entered:
-  if (is.null(input$auth_email)) {
+  # If button pushed without required information
+  if (is.null(input$json_attach)) {
     # Make a failure message
-    auth_msg('Please enter an email to authorize')
+    auth_msg('No .json file detected. Please attach the correct file')
     
   # Otherwise:
   } else {
     # Pre-emptively solve an issue with an HTTP2 error
     httr::set_config(httr::config(http_version = 0))
     
-    # Authorize GoogleDrive and GoogleSheets with the provided email
-    googledrive::drive_auth(email = input$auth_email)
-    googlesheets4::gs4_auth(email = input$auth_email)
+    # Authorize library(googledrive)
+    drive_auth(email = input$user_email,
+               path = input$json_attach$datapath)
+    
+    # Authorize library(googlesheets4)
+    gs4_auth(email = input$user_email,
+             path = input$json_attach$datapath)
     
     # Print a success message
-    auth_msg('Email authorized, thank you!')
+    auth_msg('Access granted. Please continue to file upload.')
   }
 })
 
@@ -1035,14 +1045,11 @@ auth_msg <- reactiveVal()
 output$auth_msg <- renderText({auth_msg()})
 
 ## ----------------------------------------------- ##
-           # S: 'Upload Data' Button ####  
+          #S: 'Upload Data' Button ####  
 ## ----------------------------------------------- ##
 # If the button is clicked, do the stuff in the {} brackets
 observeEvent(input$upload_button, {
-    
-# Need to make the code actually wait for the data
-req(input$file_upload)
-
+  
 ## ------------------------------ ##
   # S: Button Pushed w/o Data ####
 ## ------------------------------ ##
@@ -1058,16 +1065,16 @@ if(is.null(input$file_upload))
     ))
   
 # Message when push upload button without attaching a data file
-  upload_msg('Please attach a file')
+  upload_msg('No file detected. Please attach a file')
 
 ## ------------------------------ ##
  # S: Button Pushed with Data ####
 ## ------------------------------ ##
   } else {    
 
-# If there is a file, retrieve it
-upload <- input$file_upload
-      
+# Make the code actually wait for the data
+req(input$file_upload)
+
 ## ------------------------------ ##
   # S: Get all Checked Sheets ####
 ## ------------------------------ ##
@@ -1078,7 +1085,7 @@ data_files <- list()
 for (i in 1:nrow(chosen_tabs())) {
   # 1) Imports data into list
   data_files[[i]] <- as.data.frame(
-    readxl::read_xlsx(path = upload$datapath,
+    readxl::read_xlsx(path = input$file_upload$datapath,
                       sheet = as.character(chosen_tabs()[i, ])))
   
   # 2) Names elements after contents
@@ -1094,10 +1101,6 @@ fileData(data_files)
 # Pre-emptively solve an issue with an HTTP2 error
 httr::set_config(httr::config(http_version = 0))
 
-# Authorize GoogleDrive and GoogleSheets with the provided email
-googledrive::drive_auth(email = input$auth_email)
-googlesheets4::gs4_auth(email = input$auth_email)
-
 # Loop to save the data from the list
 for (i in 1:length(data_files)) {
   # Create a GoogleSheet of each datafile
@@ -1108,7 +1111,7 @@ for (i in 1:length(data_files)) {
   # Move each one to the pre-specified correct folder
   googledrive::drive_mv(file = paste0(surveyID(), "_",
                          names(data_files)[i]),
-           path = "App Uploads - Phase 2/")
+           path = as_id("1WMgV2n3GF1jKqbkCqWN1O7EnQ23hWu43"))
   }
 
 ## ------------------------------ ##
@@ -1129,7 +1132,7 @@ fileData <- reactiveVal()
 upload_msg <- reactiveVal()
   
 # Produce any needed messages
-output$upload_msg <- renderText({upload_msg()})
+output$upload_msg <- renderText({ upload_msg() })
 
 ## ----------------------------------------------- ##
               # S: 'Reset' Button ####  
