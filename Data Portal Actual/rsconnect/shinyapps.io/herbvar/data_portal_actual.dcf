@@ -1,0 +1,11 @@
+name: data_portal_actual
+title:
+username:
+account: herbvar
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4982356
+bundleId: 5203645
+url: https://herbvar.shinyapps.io/data_portal_actual/
+when: 1635871632.17305
+lastSyncTime: 1635871632.17306
