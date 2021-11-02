@@ -31,25 +31,61 @@ tags$h2("HerbVar Data Submission Portal - Phase 2"),
   ## For more info on tags object & HTML shortcuts:
   ## https://shiny.rstudio.com/articles/tag-glossary.html
 
-# Add information about the purpose of this portal
-tags$h4("This Shiny App handles data submission for the Herbivory Variability Network.
-        More information can be found",
-        tags$a(href = "http://herbvar.org/", "on the Network's website.")),
-
-# Add a line separating this from above
-tags$hr(),
-
 # Remind users they must use the template datafile
-tags$h4(tags$strong("This portal only accepts data entered into the template file",
-                    tags$a(href = "http://herbvar.org/protocols.html",
-                           "(provided here)."))),
+tags$h4(tags$strong("This portal only accepts data entered into",
+                    tags$a(href = "https://drive.google.com/drive/folders/10-9xPm9yOAvGCtL3dmVaoz7ODI1fghYG?usp=sharing",
+                           "the template Excel file."))),
 
 # And instruct them on the use of the app
 tags$h4("Please follow the numbered steps to upload your data successfully."),
 
-# Add a line separating this from the rest of the app
+# Add a line separating this from above
 tags$hr(),
-  
+
+## ----------------------------------------------- ##
+              # UI: Authorize App ####
+## ----------------------------------------------- ##
+# Add heading for this section
+h3("1. Authorize App"),
+
+# Explain authorization
+tags$h5("To authorize the app to work for you, go to",
+        tags$a(href = "https://drive.google.com/drive/u/3/folders/1zDl5qqLMLHeAgi7bqw6J59dJeM8Ex84U",
+               "this folder in the HerbVar Shared GoogleDrive"),
+        "and",
+        tags$strong("download the .json file.")),
+
+# Explain that the link only works for HV members
+tags$h5("Note that you must already be an HerbVar member to access the above link."),
+
+# Offer information on path to membership
+tags$h5("Not a member but want to become one in order to submit data?
+        See guidelines for becoming a member",
+        tags$a(href = "http://herbvar.org/participation.html",
+               "here.")),
+
+# Provide a place for JSON key attachment
+fileInput(inputId = "json_attach",
+          label = tags$h4("Attach .JSON File"),
+          accept = '.json',
+          width = '35%'),
+
+# Give authorization button a heading
+tags$h4("Click Button to Authorize"),
+
+# Button to authorize email on click
+actionButton(inputId = "auth_button",
+             label = "Authorize"),
+
+# After clicking the button, return the message created in the server
+verbatimTextOutput("auth_msg"),
+
+# Add a horizontal line
+tags$hr(),
+
+## ----------------------------------------------- ##
+       # UI Sidebar vs. Main Panel Format ####
+## ----------------------------------------------- ##
 # Make the app have a side bar and main panel
 sidebarLayout(position = 'left',
                 fluid = T,
@@ -60,14 +96,11 @@ sidebarLayout(position = 'left',
 # Create the sidebar
 sidebarPanel(
 
-# Give the sidebar a global title
-tags$h2("Pre-Data Submission"),
-
 ## ------------------------------ ##
   # UI: Gather File Name Parts ####
 ## ------------------------------ ##
 # Add a subtitle & more information
-h3("1. Survey Identifying Information (REQUIRED)"),
+h3("2. Enter Survey Information (REQUIRED)"),
 tags$h5("The following information is required to give a unique name to your data file.
         Please fill out all of the following as best you can."),
           
@@ -125,7 +158,7 @@ dateInput(inputId = "date",
           format = 'yyyy-mm-dd'),
 
 # Note on date
-tags$h5("Note: if sampling took >1 day, pick first day"),
+tags$h5("Note: if sampling took >1 day, select the first day"),
 
 # Add a horizontal line
 tags$hr(),
@@ -135,7 +168,7 @@ tags$hr(),
 ## ------------------------------ ##
 # We want to harvest some completed surveys information too
 # So we'll add another subheading explaining that
-h3("2. Additional Information (Optional", tags$strong("though Encouraged!"), ")"),
+h3("3. Enter Additional Information (Optional", tags$strong("though Encouraged!"), ")"),
 tags$h5("The following information is useful survey-level metadata that
         we expect may vary among scientists within a species.
         Please fill out as much as possible"),
@@ -231,15 +264,12 @@ tags$h5("Please proceed to the main panel on the right."),
 
 # Create main panel
 mainPanel(
-                  
-# Give the main panel a title too
-tags$h2("Data Submission Process"),
-                  
+
 ## ------------------------------ ##
     # UI: File Name Preview ####
 ## ------------------------------ ##
 # Give it a title
-tags$h3("3. Check File Name"),
+tags$h3("4. Check File Name"),
                   
 # Output file name from user inputs
 verbatimTextOutput(outputId = "fileID",
@@ -247,7 +277,8 @@ verbatimTextOutput(outputId = "fileID",
                   
 # And explain that is what it's doing
 tags$h5("Does the above look correct as a file name for your survey?",
-        tags$strong("If not,"), "edit your inputs to the left."),
+        tags$strong("If not,"),
+        "edit your inputs in step 2."),
                   
 # Add a horizontal line
 tags$hr(),
@@ -258,7 +289,7 @@ tags$hr(),
 # Checkboxes of the different tab options
 checkboxGroupInput(
   inputId = 'data_collected',
-  label = tags$h3("4. Select which Excel sheets you want to upload"),
+  label = tags$h3("5. Select which Excel sheets you want to upload"),
   choices = c("siteData", "densityData", "plantData", "reproData",
               "herbivoreData", "newColumns", "notes"),
   selected = c("siteData", "plantData"),
@@ -276,7 +307,7 @@ tags$hr(),
 ## ------------------------------ ##
 # Provide a place for Excel file uploading
 fileInput(inputId = "file_upload",
-          label = tags$h3("5. Attach Excel File"),
+          label = tags$h3("6. Attach Excel File"),
           accept = ".xlsx",
           width = '65%'),
 
@@ -287,7 +318,7 @@ tags$hr(),
      # UI: Preview Panels ####
 ## ------------------------------ ##
 # Give a title above this section
-tags$h3("6. Preview Data"),
+tags$h3("7. Preview Data"),
 
 # Make tabs for each sheet of the data
 tabsetPanel(
@@ -308,11 +339,11 @@ tags$hr(),
       # UI: QA/QC Panels ####
 ## ------------------------------ ##
 # Give a title above this section
-tags$h3("7. Check errors identified by app"),
+tags$h3("8. Fix Errors Identified by the App and Re-Attach Data"),
 
 # Tell people what to do if there are errors
-tags$h5("Please fix identified issues before uploading your data."),
-tags$h5("To make errors go away: edit and save the data on your computer then re-attach it (step 5)."),
+tags$h5("To make errors go away:
+        edit and save the data on your computer then re-attach it to the app (step 6)."),
 
 # Make tabs for each sheet of the data
 tabsetPanel(
@@ -333,7 +364,7 @@ tags$hr(),
      # UI: Provide Email ####
 ## ------------------------------ ##
 # Heading for this section
-tags$h3("8. Enter Email"),
+tags$h3("9. Enter Email"),
 
 # Note on this section
 tags$h5("What email should be contacted if there are questions about the data?"),
@@ -350,53 +381,10 @@ textInput(
 tags$hr(),
 
 ## ------------------------------ ##
-  # UI: Authorization Inputs ####
-## ------------------------------ ##
-# Provide a place for JSON key attachment
-fileInput(inputId = "json_attach",
-          label = tags$h3("9. Attach .JSON File"),
-          width = '65%'),
-
-# Note on this section
-tags$h5("A .json file is essentially a software key that the app requires to run"),
-tags$h5("HerbVar Members can find the key in the Shared Google Drive", 
-        tags$a(href = "https://drive.google.com/drive/u/3/folders/0AExhXNVDxZHgUk9PVA",
-               "here.")),
-
-tags$h5("NOTE: THE ABOVE LINK IS NOT CORRECT BUT WILL BE BEFORE FINAL DEPLOYMENT"),
-
-tags$h5("Not a member but want to become one in order to submit data?
-        See guidelines for becoming a member",
-        tags$a(href = "http://herbvar.org/participation.html",
-               "here")),
-
-# Add a horizontal line
-tags$hr(),
-
-## ------------------------------ ##
-  # UI: Authorization Button ####
-## ------------------------------ ##
-# Heading for this section
-tags$h3("10. Authorize App"),
-
-# Explanation
-tags$h5("Attach the .json file, then click this button to tell the app to use it"),
-
-# Button to authorize email on click
-actionButton(inputId = "auth_button",
-             label = "Authorize"),
-
-# After clicking the button, return the message created in the server
-verbatimTextOutput("auth_msg"),
-
-# Add a horizontal line
-tags$hr(),
-
-## ------------------------------ ##
       # UI: Upload Button ####
 ## ------------------------------ ##
 # Provide heading for upload button
-tags$h3("11. Upload data!"),
+tags$h3("10. Upload data!"),
 
 # Button to upload data on click
 actionButton(inputId = "upload_button",
@@ -407,6 +395,11 @@ verbatimTextOutput("upload_msg"),
 
 # And have a warning on timing
 tags$h5("A confirmation message will appear when upload is successful."),
+tags$h5("You can also check whether your data uploaded successfully by looking",
+        tags$a(href = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKhWYkt3MeWUFYu2LugHRHE6Q/edit#gid=0",
+               "here.")),
+tags$h5("If your entries in steps 2 and 3 are included in the last row,
+        your data were successfully uploaded."),
 
 # Add a line to divide this from below
 tags$hr(),
@@ -415,7 +408,7 @@ tags$hr(),
       # UI: Reset Button ####
 ## ------------------------------ ##
 # Provide heading for upload button
-tags$h3("12. Reset the App (Optional)"),
+tags$h3("11. Reset the App (Optional)"),
 
 # Button to upload data on click
 actionButton(inputId = "reset_button",
@@ -428,7 +421,7 @@ verbatimTextOutput("reset_msg"),
 tags$h5("This button resets everything",
         tags$strong("except for"),
         "PI name, email, and checkboxes."),
-tags$h5("It is intended as an optional convenience for entering multiple Excel files."),
+tags$h5("It is intended as an optional convenience for uploading multiple Excel files."),
 
 # Add a line for some breathing room at the bottom
 tags$hr()
@@ -623,7 +616,7 @@ output$site_out <- DT::renderDataTable({
     } else {
   # If data are attached and checkbox is selected, preview the table
   DT::datatable(data = site_actual(),
-    options = list(pageLength = 5),
+    options = list(pageLength = 10),
     rownames = F) }
       }
     })
@@ -636,7 +629,7 @@ output$dens_out <- DT::renderDataTable({
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "densityData")) == 0){ box_error }
     else {
       DT::datatable(data = dens_actual(),
-        options = list(pageLength = 5),
+        options = list(pageLength = 10),
         rownames = F) }
   }
 })
@@ -647,7 +640,7 @@ output$plant_out <- DT::renderDataTable({
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ box_error }
     else {
       DT::datatable(data = plant_actual(),
-        options = list(pageLength = 5),
+        options = list(pageLength = 10),
         rownames = F) }
   }
 })
@@ -658,7 +651,7 @@ output$repr_out <- DT::renderDataTable({
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){ box_error }
     else {
       DT::datatable(data = repr_actual(),
-        options = list(pageLength = 5),
+        options = list(pageLength = 10),
         rownames = F) }
   }
 })
@@ -669,7 +662,7 @@ output$bug_out <- DT::renderDataTable({
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){ box_error }
     else {
       DT::datatable(data = bug_actual(),
-        options = list(pageLength = 5),
+        options = list(pageLength = 10),
         rownames = F) }
   }
 })
@@ -680,7 +673,7 @@ output$new_out <- DT::renderDataTable({
   else { if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ box_error }
     else {
       DT::datatable(data = new_actual(),
-        options = list(pageLength = 5),
+        options = list(pageLength = 10),
         rownames = F) }
   }
 })
@@ -693,7 +686,7 @@ output$notes_out <- DT::renderDataTable({
       DT::datatable(data = as.data.frame(
         readxl::read_xlsx(path = input$file_upload$datapath,
                           sheet = "notes")),
-        options = list(pageLength = 5),
+        options = list(pageLength = 10),
         rownames = F) }
   }
 })
