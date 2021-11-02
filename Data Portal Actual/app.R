@@ -440,11 +440,43 @@ tags$hr()
 server <- function(input, output, session) {
 
 ## ----------------------------------------------- ##
+          # S: 'Authorize App' Button ####  
+## ----------------------------------------------- ##
+# If the authorize button is clicked
+observeEvent(input$auth_button, {
+
+# If button pushed without required information
+  if (is.null(input$json_attach)) {
+    
+    # Make a failure message
+    output$auth_msg <- renderPrint({
+      'No .json file detected. Please attach the correct file.'
+      })
+      
+      # Otherwise:
+    } else {
+      # Pre-emptively solve an issue with an HTTP2 error
+      httr::set_config(httr::config(http_version = 0))
+      
+      # Authorize library(googledrive)
+      drive_auth(email = input$user_email,
+                 path = input$json_attach$datapath)
+      
+      # Authorize library(googlesheets4)
+      gs4_auth(email = input$user_email,
+               path = input$json_attach$datapath)
+      
+      # Print a success message
+      output$auth_msg <- renderPrint({
+        'Access granted. Please continue to file upload.'
+      })
+      }
+  })
+
+## ----------------------------------------------- ##
              # S: File Name Output ####  
 ## ----------------------------------------------- ##
-# Render the filename from the supplied information in the UI
-  ## Inside of a render*() function to update dynamically
-# Gather file name
+# Gather file namefrom the supplied information in the UI
 surveyID <- reactive({
   paste(
     input$pi_last,
@@ -463,6 +495,7 @@ output$fileID <- renderPrint({ surveyID() })
         # S: Collect Checkbox Choices ####
 ## ----------------------------------------------- ##
 # Get an object of the selected checkboxes
+  ## The complexity below is to read a string as a dataframe
 chosen_tabs <- reactive({
   as.data.frame(
     as.matrix(
@@ -502,8 +535,8 @@ meta <- reactive({
    "herbivoreDataIncluded" = "herbivoreData" %in% chosen_tabs()$V1,
    "newColumnsIncluded" = "newColumns" %in% chosen_tabs()$V1,
    "notesIncluded" = "notes" %in% chosen_tabs()$V1
-  )
-})
+   )
+  })
 
 ## ----------------------------------------------- ##
         # S: Make all Sheets Reactive ####
@@ -582,17 +615,18 @@ site_error <- data.frame("FATAL_ERROR" = c("*This sheet is REQUIRED*",
 
 # Date is incorrectly formatted
 error_msg.bad_date_format <- paste("Date is incorrectly formatted in at least one row.",
-                                    "Please use yyyy.mm.dd format.",
-                                    "Be careful to use periods instead of slashes,",
-                                    "this avoids Excel date issues", sep = ' ')
+                                    "Please use yyyy.mm.dd format",
+                                    "and use periods instead of slashes",
+                                    "(this avoids Excel date issues)", sep = ' ')
 
 # Any new columns created but missing from newColumns sheet
 error_msg.missing_new_cols <- paste("New variables(s) added to sheet(s) but",
                                      "not defined in newColumns sheet.",
-                                     "Please define all new columns.", sep = ' ')
+                                     "Please provide definitions for all new columns.", sep = ' ')
 
 # Missing surveyID, plantSpecies, date, or site
-error_msg.missing_index <- paste("At least one row is missing surveyID, plantSpecies, date, or site")
+error_msg.missing_index <- paste("At least one row is missing surveyID,",
+                                 "plantSpecies, date, or site")
 
 # No data in sheet
 error_msg.empty_sheet <- paste("You've chosen to upload this sheet but no entries were detected.",
@@ -1003,40 +1037,6 @@ output$notes_chk <- renderTable({
 })
 
 ## ----------------------------------------------- ##
-           # S: 'Authorize' Button ####  
-## ----------------------------------------------- ##
-# If the authorize button is clicked
-observeEvent(input$auth_button, {
-  
-  # If button pushed without required information
-  if (is.null(input$json_attach)) {
-    
-    # Make a failure message
-    output$auth_msg <- renderPrint({
-      'No .json file detected. Please attach the correct file.'
-      })
-    
-  # Otherwise:
-  } else {
-    # Pre-emptively solve an issue with an HTTP2 error
-    httr::set_config(httr::config(http_version = 0))
-    
-    # Authorize library(googledrive)
-    drive_auth(email = input$user_email,
-               path = input$json_attach$datapath)
-    
-    # Authorize library(googlesheets4)
-    gs4_auth(email = input$user_email,
-             path = input$json_attach$datapath)
-    
-    # Print a success message
-    output$auth_msg <- renderPrint({
-      'Access granted. Please continue to file upload.'
-      })
-  }
-})
-
-## ----------------------------------------------- ##
           #S: 'Upload Data' Button ####  
 ## ----------------------------------------------- ##
 # If the button is clicked, do the stuff in the {} brackets
@@ -1105,7 +1105,7 @@ for (i in 1:length(data_files)) {
   # S: Save Entered Metadata ####
 ## ------------------------------ ##
 # Add the survey metadata to the Completed Surveys file
-sheet_append(ss = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKhWYkt3MeWUFYu2LugHRHE6Q/edit?usp=sharing",
+googlesheets4::sheet_append(ss = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKhWYkt3MeWUFYu2LugHRHE6Q/edit?usp=sharing",
              data = meta(),
              sheet = "completedSurveys")
 
@@ -1183,9 +1183,16 @@ observeEvent(input$reset_button, {
   #fileData <- reactiveVal(data_files = NULL)
   shinyjs::reset("file_upload")
   
-  # Print successful reset message
-  reset_msg('App reset. Awaiting next file')
-
+  # Reset data upload message too!
+  output$upload_msg <- renderPrint({
+    'Please attach next file'
+  })
+  
+  # Create successful reset message
+  output$reset_msg <- renderPrint({
+    'App reset. Awaiting next file'
+    })
+  
   # Note that PI name (first and last), auhtorization email, and checkboxes are not reset
   # It seems likely that users of the app who want a reset button would:
     ## 1) be representing the same research team (so same PI file to file)
@@ -1193,12 +1200,6 @@ observeEvent(input$reset_button, {
     ## 3) and have collected the same data (so checkboxes not reset)
     
 })
-
-# Call reactive mssage
-reset_msg <- reactiveVal()
-
-# And send it to UI
-output$reset_msg <- renderText({reset_msg()})
 
 ## ----------------------------------------------- ##
         # S: Close Server Parentheses ####
