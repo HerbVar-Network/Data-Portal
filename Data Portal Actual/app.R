@@ -34,7 +34,8 @@ tags$h2("HerbVar Data Submission Portal - Phase 2"),
 # Remind users they must use the template datafile
 tags$h4(tags$strong("This portal only accepts data entered into",
                     tags$a(href = "https://drive.google.com/drive/folders/10-9xPm9yOAvGCtL3dmVaoz7ODI1fghYG?usp=sharing",
-                           "the template Excel file."))),
+                           "the template Excel file.",
+                           target = "_blank"))),
 
 # And instruct them on the use of the app
 tags$h4("Please follow the numbered steps to upload your data successfully."),
@@ -51,7 +52,8 @@ h3("1. Authorize App"),
 # Explain authorization
 tags$h5("To authorize the app to work for you, go to",
         tags$a(href = "https://drive.google.com/drive/u/3/folders/1zDl5qqLMLHeAgi7bqw6J59dJeM8Ex84U",
-               "this folder in the HerbVar Shared GoogleDrive"),
+               "this folder in the HerbVar Shared GoogleDrive",
+               target = "_blank"),
         "and",
         tags$strong("download the .json file.")),
 
@@ -62,7 +64,8 @@ tags$h5("Note that you must already be an HerbVar member to access the above lin
 tags$h5("Not a member but want to become one in order to submit data?
         See guidelines for becoming a member",
         tags$a(href = "http://herbvar.org/participation.html",
-               "here.")),
+               "here.",
+               target = "_blank")),
 
 # Provide a place for JSON key attachment
 fileInput(inputId = "json_attach",
@@ -397,7 +400,8 @@ verbatimTextOutput("upload_msg"),
 tags$h5("A confirmation message will appear when upload is successful."),
 tags$h5("You can also check whether your data uploaded successfully by looking",
         tags$a(href = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKhWYkt3MeWUFYu2LugHRHE6Q/edit#gid=0",
-               "here.")),
+               "here.",
+               target = "_blank")),
 tags$h5("If your entries in steps 2 and 3 are included in the last row,
         your data were successfully uploaded."),
 
