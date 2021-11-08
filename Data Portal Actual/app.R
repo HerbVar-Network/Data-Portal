@@ -472,7 +472,7 @@ observeEvent(input$auth_button, {
       
       # Print a success message
       output$auth_msg <- renderPrint({
-        'Access granted. Please continue to file upload.'
+        'Access granted. Please proceed to step 2.'
       })
       }
   })
@@ -1187,14 +1187,13 @@ observeEvent(input$reset_button, {
   #fileData <- reactiveVal(data_files = NULL)
   shinyjs::reset("file_upload")
   
-  # Reset data upload message too!
-  output$upload_msg <- renderPrint({
-    'Please attach next file'
-  })
+  # Reset data upload & authorization messages
+  output$upload_msg <- renderPrint({'Please attach next file.'})
+  output$auth_msg <- renderPrint({'App still authorized. Proceed to step 2.'})
   
   # Create successful reset message
   output$reset_msg <- renderPrint({
-    'App reset. Awaiting next file'
+    'App reset. Awaiting next file.'
     })
   
   # Note that PI name (first and last), auhtorization email, and checkboxes are not reset
