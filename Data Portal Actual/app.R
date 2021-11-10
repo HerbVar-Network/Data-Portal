@@ -33,12 +33,14 @@ tags$h2("HerbVar Data Submission Portal - Phase 2"),
 
 # Remind users they must use the template datafile
 tags$h4(tags$strong("This portal only accepts data entered into",
-                    tags$a(href = "https://drive.google.com/drive/folders/10-9xPm9yOAvGCtL3dmVaoz7ODI1fghYG?usp=sharing",
+                    tags$a(href = "http://herbvar.org/protocols/HerbVar%20Datasheet%20Template.xlsx",
                            "the template Excel file.",
                            target = "_blank"))),
 
 # And instruct them on the use of the app
-tags$h4("Please follow the numbered steps to upload your data successfully."),
+tags$h4("Please follow the numbered steps ",
+        tags$strong("to step 9"),
+        " to upload your data."),
 
 # Add a line separating this from above
 tags$hr(),
@@ -47,18 +49,15 @@ tags$hr(),
               # UI: Authorize App ####
 ## ----------------------------------------------- ##
 # Add heading for this section
-h3("1. Authorize App"),
+h3("1. Authorize App (Equivalent to Password Entry)"),
 
 # Explain authorization
-tags$h5("To authorize the app to work for you, go to",
+tags$h5("HerbVar members can authorize the app by going",
         tags$a(href = "https://drive.google.com/drive/u/3/folders/1zDl5qqLMLHeAgi7bqw6J59dJeM8Ex84U",
-               "this folder in the HerbVar Shared GoogleDrive",
+               "here",
                target = "_blank"),
         "and",
-        tags$strong("download the .json file.")),
-
-# Explain that the link only works for HV members
-tags$h5("Note that you must already be an HerbVar member to access the above link."),
+        tags$strong("downloading the .json file.")),
 
 # Offer information on path to membership
 tags$h5("Not a member but want to become one in order to submit data?
@@ -99,18 +98,24 @@ sidebarLayout(position = 'left',
 # Create the sidebar
 sidebarPanel(
 
+# Add a subtitle & more information
+h3("2. Enter Survey Information (REQUIRED)"),
+tags$h5("The following information is needed to name your data file.
+        Please fill out all fields in this step (and do not use underscores (' _ ')."),
+  
+## ------------------------------ ##
+     # UI: Require Email ####
+## ------------------------------ ##
+# Request email
+  textInput(
+    inputId = "user_email",
+    label = tags$h4("Contact Email Address"),
+    placeholder = "me@gmail.com"
+  ),
+  
 ## ------------------------------ ##
   # UI: Gather File Name Parts ####
 ## ------------------------------ ##
-# Add a subtitle & more information
-h3("2. Enter Survey Information (REQUIRED)"),
-tags$h5("The following information is required to give a unique name to your data file.
-        Please fill out all of the following as best you can."),
-          
-# Add a warning about underscores
-tags$h5("Please", tags$strong("DO NOT"),
-        "use underscores ( _ ) in your entries."),
-
 # We need the following to uniquely name the file users submit:
   ## PI last name
 textInput(
@@ -136,7 +141,7 @@ textInput(
 ## Specific epithet of survey species
 textInput(
   inputId = "sp",
-  label = tags$h4("Specific Epithet of Surveyed Plant"),
+  label = tags$h4("Species of Surveyed Plant"),
   placeholder = "major"
   ),
           
@@ -300,7 +305,7 @@ checkboxGroupInput(
 ),
 
 # More notes on the checkboxes
-tags$h5("Note that only checked tabs will be uploaded"),
+tags$h5("Note that only checked boxes will be uploaded."),
 
 # Add a line separating this from the rest of the app
 tags$hr(),
@@ -314,6 +319,14 @@ fileInput(inputId = "file_upload",
           accept = ".xlsx",
           width = '65%'),
 
+# Add a note about misleading "upload" bar
+tags$h5("Note that the blue 'upload' progress bar is misleading!"),
+tags$h5("Your data",
+        strong("HAVE NOT been uploaded"),
+        "(yet); they are uploaded at step 9."),
+tags$h5("So please preview data in step 7,",
+        "and fix any errors identified in each sheet by step 8"),
+
 # Add a horizontal line
 tags$hr(),
 
@@ -326,9 +339,9 @@ tags$h3("7. Preview Data"),
 # Make tabs for each sheet of the data
 tabsetPanel(
   id = "data_tabs",
+  tabPanel(title = "plantData", DT::dataTableOutput("plant_out")),
   tabPanel(title = "siteData", DT::dataTableOutput("site_out")),
   tabPanel(title = "densityData", DT::dataTableOutput("dens_out")),
-  tabPanel(title = "plantData", DT::dataTableOutput("plant_out")),
   tabPanel(title = "reproData", DT::dataTableOutput("repr_out")),
   tabPanel(title = "herbivoreData", DT::dataTableOutput("bug_out")),
   tabPanel(title = "newColumns", DT::dataTableOutput("new_out")),
@@ -351,9 +364,9 @@ tags$h5("To make errors go away:
 # Make tabs for each sheet of the data
 tabsetPanel(
   id = "check_tabs",
+  tabPanel(title = "plantData", tableOutput("plant_chk")),
   tabPanel(title = "siteData", tableOutput("site_chk")),
   tabPanel(title = "densityData", tableOutput("dens_chk")),
-  tabPanel(title = "plantData", tableOutput("plant_chk")),
   tabPanel(title = "reproData", tableOutput("repr_chk")),
   tabPanel(title = "herbivoreData", tableOutput("bug_chk")),
   tabPanel(title = "newColumns", tableOutput("new_chk")),
@@ -364,46 +377,29 @@ tabsetPanel(
 tags$hr(),
 
 ## ------------------------------ ##
-     # UI: Provide Email ####
-## ------------------------------ ##
-# Heading for this section
-tags$h3("9. Enter Email"),
-
-# Note on this section
-tags$h5("What email should be contacted if there are questions about the data?"),
-
-# Request email
-textInput(
-  inputId = "user_email",
-  label = "Email Address",
-  placeholder = "me@gmail.com",
-  width = '50%'
-),
-
-# Line break
-tags$hr(),
-
-## ------------------------------ ##
       # UI: Upload Button ####
 ## ------------------------------ ##
 # Provide heading for upload button
-tags$h3("10. Upload data!"),
+tags$h3("9. Upload data!"),
+
+# Warn users about timing
+tags$h5("This step takes ~5 seconds per selected sheet;",
+        strong("a confirmation message will appear when upload is complete.")),
 
 # Button to upload data on click
 actionButton(inputId = "upload_button",
              label = "Upload Attached Data"),
-        
+
 # After clicking the button, return the message created in the server
 verbatimTextOutput("upload_msg"),
 
-# And have a warning on timing
-tags$h5("A confirmation message will appear when upload is successful."),
-tags$h5("You can also check whether your data uploaded successfully by looking",
+# And tell people about the file that contains the secondary check for upload
+tags$h5("Additionally, if",
         tags$a(href = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKhWYkt3MeWUFYu2LugHRHE6Q/edit#gid=0",
-               "here.",
-               target = "_blank")),
-tags$h5("If your entries in steps 2 and 3 are included in the last row,
-        your data were successfully uploaded."),
+               "this file",
+               target = "_blank"),
+        "includes your entries from steps 2 and 3 in the bottom row",
+        "then your data have been uploaded."),
 
 # Add a line to divide this from below
 tags$hr(),
@@ -412,7 +408,10 @@ tags$hr(),
       # UI: Reset Button ####
 ## ------------------------------ ##
 # Provide heading for upload button
-tags$h3("11. Reset the App (Optional)"),
+tags$h3("10. Reset the App (Optional)"),
+
+# Add explanation note
+tags$h5("This button is an optional convenience to facilitate uploading multiple files."),
 
 # Button to upload data on click
 actionButton(inputId = "reset_button",
@@ -424,8 +423,7 @@ verbatimTextOutput("reset_msg"),
 # And add some explanation
 tags$h5("This button resets everything",
         tags$strong("except for"),
-        "PI name, email, and checkboxes."),
-tags$h5("It is intended as an optional convenience for uploading multiple Excel files."),
+        "email, PI name, and checkboxes."),
 
 # Add a line for some breathing room at the bottom
 tags$hr()
@@ -605,36 +603,29 @@ notes_actual <- reactive({
 # These are called later as needed
 
 # If data aren't attached
-attach_error <- data.frame("ALERT" = c("No data detected",
-                                       "Have you attached your Excel file?"))
+attach_error <- data.frame("ALERT" = c("No data detected. Have you attached your Excel file?"))
 
 # Data are attached but a given sheet's box wasn't selected
-box_error <- data.frame("ALERT" = c("Sheet not selected for upload",
-                                    "Check the box above if you want to upload"))
+box_error <- data.frame("ALERT" = c("Sheet not selected for upload. Check the box above if you want to upload."))
 
 # siteData box unchecked
-site_error <- data.frame("FATAL_ERROR" = c("*This sheet is REQUIRED*",
-                                           "Please check the box above and",
-                                           "ensure that this sheet is filled out"))
+site_error <- data.frame("FATAL_ERROR" = c("This sheet is REQUIRED.",
+                                           "Please check the box above and ensure that this sheet is filled out."))
 
 # Date is incorrectly formatted
 error_msg.bad_date_format <- paste("Date is incorrectly formatted in at least one row.",
-                                    "Please use yyyy.mm.dd format",
-                                    "and use periods instead of slashes",
-                                    "(this avoids Excel date issues)", sep = ' ')
+                                    "Please use yyyy.mm.dd format and use periods instead of slashes (this avoids Excel date issues).", sep = ' ')
 
 # Any new columns created but missing from newColumns sheet
-error_msg.missing_new_cols <- paste("New variables(s) added to sheet(s) but",
-                                     "not defined in newColumns sheet.",
+error_msg.missing_new_cols <- paste("New variables(s) added to sheet(s) but not defined in newColumns sheet.",
                                      "Please provide definitions for all new columns.", sep = ' ')
 
 # Missing surveyID, plantSpecies, date, or site
-error_msg.missing_index <- paste("At least one row is missing surveyID,",
-                                 "plantSpecies, date, or site")
+error_msg.missing_index <- paste("At least one row is missing surveyID, plantSpecies, date, or site.")
 
 # No data in sheet
 error_msg.empty_sheet <- paste("You've chosen to upload this sheet but no entries were detected.",
-                               "Please do not upload blank Excel sheets", sep = ' ')
+                               "Please do not upload blank Excel sheets.", sep = ' ')
 
 # Message when no (other) errors are detected (in QA/QC portion)
 green_light <- paste("No (other) errors detected; thank you for your diligence!")
@@ -776,9 +767,9 @@ output$dens_chk <- renderTable({
       rbind(
         # Any cells that would be coerced into numeric
         data.frame("Errors" = ifelse(is.na(as.numeric(dens_actual()$numPlantsPer_m2)),
-                                     yes = paste0("This entry '",
-                                                  dens_actual()$numPlantsPer_m2,
-                                                  "' contains a letter or special character ",
+                                     yes = paste0("The entry for location ",
+                                                  dens_actual()$randomLocationID,
+                                                  " contains a letter or special character ",
                                                   "or is lacking any input"),
                                      no = NA))
       ) %>%
@@ -810,26 +801,43 @@ output$plant_chk <- renderTable({
                                                     "' numLeavesHerb (# damaged leaves) ",
                                                     "is greater than numLeaves (total leaves)"),
                                        no = NA))
-        # Percents >100
+        # Percents >100 - percHerbPlant
+        , data.frame("Errors" = ifelse((as.numeric(plant_actual()$percHerbPlant) > 100),
+                                       yes = paste0("Plant '", plant_actual()$plantID, 
+                                                    "' has percHerbPlant > 100%."),
+                                       no = NA))
+        # Percents >100 - focal/otherPlantCover
         , data.frame("Errors" = ifelse((as.numeric(plant_actual()$focalPlantCover) > 100 |
-                                          as.numeric(plant_actual()$otherPlantCover) > 100 |
-                                          as.numeric(plant_actual()$percHerbPlant) > 100),
+                                          as.numeric(plant_actual()$otherPlantCover) > 100),
                                        yes = paste0("Plant '", plant_actual()$plantID, 
-                                                    "' has percHerbPlant, focal, or otherPlantCover > 100%."),
+                                                    "' has focalPlantCover or otherPlantCover > 100%."),
                                        no = NA))
-        # Percents <0
+        # Percents <0 - percHerbPlant
+        , data.frame("Errors" = ifelse((as.numeric(plant_actual()$percHerbPlant) < 0),
+                                       yes = paste0("Plant '", plant_actual()$plantID, 
+                                                    "' has percHerbPlant < 0%."),
+                                       no = NA))
+        # Percents <0 - focal/otherPlantCover
         , data.frame("Errors" = ifelse((as.numeric(plant_actual()$focalPlantCover) < 0 |
-                                          as.numeric(plant_actual()$otherPlantCover) < 0 |
-                                          as.numeric(plant_actual()$percHerbPlant) < 0),
+                                          as.numeric(plant_actual()$otherPlantCover) < 0),
                                        yes = paste0("Plant '", plant_actual()$plantID, 
-                                                    "' has percHerbPlant, focal, or otherPlantCover < 0%."),
+                                                    "' has focalPlantCover or otherPlantCover < 0%."),
                                        no = NA))
-        # Percent between 0 and 1
-        , data.frame("Errors" = ifelse(((as.numeric(plant_actual()$focalPlantCover) > 0 & as.numeric(plant_actual()$focalPlantCover) < 0.5) |
-                                          (as.numeric(plant_actual()$otherPlantCover) > 0 & as.numeric(plant_actual()$otherPlantCover) < 0.5) |
-                                          (as.numeric(plant_actual()$percHerbPlant) > 0 & as.numeric(plant_actual()$percHerbPlant) < 0.5)),
+        # Percent between 0 and 1 - percHerbPlant
+        , data.frame("Errors" = ifelse(((as.numeric(plant_actual()$percHerbPlant) > 0 &
+                                           as.numeric(plant_actual()$percHerbPlant) < 0.5)),
                                        yes = paste0("Plant '", plant_actual()$plantID, 
-                                                    "' has a very small percHerbPlant, focal, or otherPlantCover (0 < x < 0.5).",
+                                                    "' has a very small percHerbPlant (0 < x < 0.5). ",
+                                                    "Please check that you didn't enter a % in Excel (",
+                                                    "this would auto-convert to a decimal upon uploading)"),
+                                       no = NA))
+        # Percent between 0 and 1 - focal/otherPlantCover
+        , data.frame("Errors" = ifelse(((as.numeric(plant_actual()$focalPlantCover) > 0 &
+                                           as.numeric(plant_actual()$focalPlantCover) < 0.5) |
+                                          (as.numeric(plant_actual()$otherPlantCover) > 0 &
+                                             as.numeric(plant_actual()$otherPlantCover) < 0.5)),
+                                       yes = paste0("Plant '", plant_actual()$plantID, 
+                                                    "' has a very small focalPlantCover or otherPlantCover (0 < x < 0.5). ",
                                                     "Please check that you didn't enter a % in Excel (",
                                                     "this would auto-convert to a decimal upon uploading)"),
                                        no = NA))
