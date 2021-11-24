@@ -52,14 +52,15 @@ tags$hr(),
 h3("1. Authorize App (Equivalent to Password Entry)"),
 
 # Explain authorization
-tags$h5("HerbVar members can authorize the app by going",
-        tags$a(href = "https://drive.google.com/drive/u/3/folders/1zDl5qqLMLHeAgi7bqw6J59dJeM8Ex84U",
-               "here",
-               target = "_blank"),
-        "and",
-        tags$strong("downloading the .json file.")),
+# Get the .json key
+h4("i)"
+   ,a(href = "https://drive.google.com/drive/u/3/folders/1zDl5qqLMLHeAgi7bqw6J59dJeM8Ex84U",
+      "Download Phase 2 Password File (.json file)",
+      target = "_blank"
+   )),
 
 # Offer information on path to membership
+h5("Only members can use the above link and download the file."),
 tags$h5("Not a member but want to become one in order to submit data?
         See guidelines for becoming a member",
         tags$a(href = "http://herbvar.org/participation.html",
@@ -68,12 +69,12 @@ tags$h5("Not a member but want to become one in order to submit data?
 
 # Provide a place for JSON key attachment
 fileInput(inputId = "json_attach",
-          label = tags$h4("Attach .JSON File"),
+          label = tags$h4("ii) Attach .JSON File"),
           accept = '.json',
           width = '35%'),
 
 # Give authorization button a heading
-tags$h4("Click Button to Authorize"),
+tags$h4("iii) Click Button to Authorize"),
 
 # Button to authorize email on click
 actionButton(inputId = "auth_button",
@@ -324,8 +325,8 @@ tags$h5("Note that the blue 'upload' progress bar is misleading!"),
 tags$h5("Your data",
         strong("HAVE NOT been uploaded"),
         "(yet); they are uploaded at step 9."),
-tags$h5("So please preview data in step 7,",
-        "and fix any errors identified in each sheet by step 8"),
+tags$h5("So, please preview data in step 7,",
+        "and fix any errors identified in each sheet by step 8."),
 
 # Add a horizontal line
 tags$hr(),
@@ -382,11 +383,23 @@ tags$hr(),
 # Provide heading for upload button
 tags$h3("9. Upload data!"),
 
-# Warn users about timing
-tags$h5("This step takes ~5 seconds per selected sheet;",
-        strong("a confirmation message will appear when upload is complete.")),
+# Ask users to confirm they are ready
+radioButtons(inputId = "upload_confirmation",
+             label = h4("i) Please confirm that you are ready for upload."),
+             choices = c("No"),
+             width = '100%'),
+
+# Explain button
+h5("If above button only has 'No' as an option, then either no
+   .json file was attached in step 1 OR the file was attached but
+   the 'Authorize' button was not clicked in step 1."),
+h5("In either case, please return to step 1 before proceeding."),
+
+# Lot of text so insert a break
+br(),
 
 # Button to upload data on click
+h4("ii) When ready, click the button below to upload your data!"),
 actionButton(inputId = "upload_button",
              label = "Upload Attached Data"),
 
@@ -394,12 +407,13 @@ actionButton(inputId = "upload_button",
 verbatimTextOutput("upload_msg"),
 
 # And tell people about the file that contains the secondary check for upload
-tags$h5("Additionally, if",
-        tags$a(href = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKhWYkt3MeWUFYu2LugHRHE6Q/edit#gid=0",
-               "this file",
+# Warn users about timing
+tags$h5("This step takes ~5 seconds per selected sheet;",
+        strong("a confirmation message will appear when upload is complete.")),
+tags$h5(a(href = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKhWYkt3MeWUFYu2LugHRHE6Q/edit#gid=0",
+               "This file",
                target = "_blank"),
-        "includes your entries from steps 2 and 3 in the bottom row",
-        "then your data have been uploaded."),
+        "will include your entries from steps 2 and 3 when data upload is complete."),
 
 # Add a line to divide this from below
 tags$hr(),
@@ -467,6 +481,10 @@ observeEvent(input$auth_button, {
       # Authorize library(googlesheets4)
       gs4_auth(email = input$user_email,
                path = input$json_attach$datapath)
+      
+      # And update the upload radiobuttons to allow users to submit their data
+      updateRadioButtons(inputId = "upload_confirmation",
+                         choices = c("No", "Yes"))
       
       # Print a success message
       output$auth_msg <- renderPrint({
@@ -1053,30 +1071,40 @@ output$notes_chk <- renderTable({
 ## ----------------------------------------------- ##
 # If the button is clicked, do the stuff in the {} brackets
 observeEvent(input$upload_button, {
-  
-## ------------------------------ ##
-  # S: Button Pushed w/o Data ####
-## ------------------------------ ##
-# If the upload button is clicked but no data are attached:
-if(is.null(input$file_upload))
-  {
-  
-  # Message when push upload button without attaching a data file
-    output$upload_msg <- renderPrint({
-      'No file detected. Please attach a file'
-      })
 
-## ------------------------------ ##
- # S: Button Pushed with Data ####
-## ------------------------------ ##
-  } else {    
+## ------------------------------------ ##
+       # S: Upload Not Ready ####
+## ------------------------------------ ##
+if(input$upload_confirmation == "No") { 
+
+# Print error message but otherwise do nothing
+output$upload_msg <- renderPrint({
+    "'Yes' option NOT selected above (step 9). See note below buttons for troubleshooting."
+  })
+  
+
+## ------------------------------------ ##
+ # S: Upload Ready but File Missing ####
+## ------------------------------------ ##
+} else {
+
+# If the upload button is clicked but no data are attached:
+if(is.null(input$file_upload) & input$upload_confirmation == "Yes")
+  {
+
+# Message when push upload button without attaching a data file
+output$upload_msg <- renderPrint({
+  'No file detected. Please attach a file.'
+  })
+
+## ------------------------------------ ##
+ # S: Upload Ready and File Attached ####
+## ------------------------------------ ##
+} else {
 
 # Make the code actually wait for the data
 req(input$file_upload)
 
-## ------------------------------ ##
-  # S: Get all Checked Sheets ####
-## ------------------------------ ##
 # Create an empty list
 data_files <- list()
 
@@ -1094,9 +1122,6 @@ for (i in 1:nrow(chosen_tabs())) {
 # Set reactive value
 fileData(data_files)
 
-## ------------------------------ ##
-  # S: Save all Checked Sheets ####
-## ------------------------------ ##
 # Pre-emptively solve an issue with an HTTP2 error
 httr::set_config(httr::config(http_version = 0))
 
@@ -1113,9 +1138,6 @@ for (i in 1:length(data_files)) {
            path = as_id("1WMgV2n3GF1jKqbkCqWN1O7EnQ23hWu43"))
   }
 
-## ------------------------------ ##
-  # S: Save Entered Metadata ####
-## ------------------------------ ##
 # Add the survey metadata to the Completed Surveys file
 googlesheets4::sheet_append(ss = "https://docs.google.com/spreadsheets/d/1XFNI7KXeuo5NuHL-0miKhWYkt3MeWUFYu2LugHRHE6Q/edit?usp=sharing",
              data = meta(),
@@ -1126,9 +1148,9 @@ output$upload_msg <- renderPrint({
   'Data uploaded. Thank you!'
 })
 
-}
-  })
-  
+# Close out parentheses
+}}})
+
 # Call any remaining reactive values
 fileData <- reactiveVal()
 
