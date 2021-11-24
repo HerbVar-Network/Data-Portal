@@ -391,8 +391,8 @@ radioButtons(inputId = "upload_confirmation",
 
 # Explain button
 h5("If above button only has 'No' as an option, then either no
-   .json file was attached in step 1 OR the file was attached but
-   the 'Authorize' button was not clicked in step 1."),
+   .json file was attached in step 1 OR the .json file was attached but
+   the 'Authorize' button was not clicked."),
 h5("In either case, please return to step 1 before proceeding."),
 
 # Lot of text so insert a break
