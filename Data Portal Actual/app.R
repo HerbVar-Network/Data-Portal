@@ -1081,7 +1081,6 @@ if(input$upload_confirmation == "No") {
 output$upload_msg <- renderPrint({
     "'Yes' option NOT selected above (step 9). See note below buttons for troubleshooting."
   })
-  
 
 ## ------------------------------------ ##
  # S: Upload Ready but File Missing ####
