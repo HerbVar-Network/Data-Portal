@@ -1101,6 +1101,11 @@ output$upload_msg <- renderPrint({
 ## ------------------------------------ ##
 } else {
 
+# Print a message telling the user that their request has been received
+output$upload_msg <- renderPrint({
+  'Processing. Please do not leave page.'
+})
+
 # Make the code actually wait for the data
 req(input$file_upload)
 
