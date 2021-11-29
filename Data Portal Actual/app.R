@@ -100,7 +100,7 @@ sidebarLayout(position = 'left',
 sidebarPanel(
 
 # Add a subtitle & more information
-h3("2. Enter Survey Information (REQUIRED)"),
+h3("2. Enter Survey Information"),
 tags$h5("The following information is needed to name your data file.
         Please fill out all fields in this step (and do not use underscores (' _ ')."),
   
