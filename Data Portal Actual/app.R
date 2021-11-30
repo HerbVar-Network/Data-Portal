@@ -183,6 +183,13 @@ tags$h5("The following information is useful survey-level metadata that
         Please fill out as much as possible"),
 
 # And collect some more information
+## Family
+textInput(
+  inputId = "fam",
+  label = tags$h4("Family of Surveyed Plant"),
+  placeholder = "Plantaginaceae"
+),
+
 ## Plant Common Name
 textInput(
   inputId = "common",
@@ -536,6 +543,7 @@ meta <- reactive({
    "PI_firstName" = input$pi_first,
    "plantGenus" = input$genus,
    "plantSpecies" = paste(input$genus, input$sp, sep = '_'),
+   "plantFamily" = input$fam,
    "plantCommon" = input$common,
    "siteSimp" = str_sub(input$site, start = 1, end = 8),
    "siteVerbose" = input$site,
