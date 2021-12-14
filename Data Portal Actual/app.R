@@ -101,9 +101,12 @@ sidebarPanel(
 
 # Add a subtitle & more information
 h3("2. Enter Survey Information"),
-tags$h5("The following information is needed to name your data file.
-        Please fill out all fields in this step (and do not use underscores (' _ ')."),
-  
+tags$h4("The following information is needed to name your data file."),
+# Provide a warning about slashes
+h5("Note that slashes (' / '), underscores (' _ '),
+   and periods (' . ') will be automatically changed to hyphens (' - ').
+   This is needed to preserve standardization among file names."),
+
 ## ------------------------------ ##
      # UI: Require Email ####
 ## ------------------------------ ##
@@ -124,13 +127,6 @@ textInput(
   label = tags$h4("Last Name of the PI"),
   placeholder = "von Humboldt"
   ),
-
-# Provide a warning about slashes
-h5("Note: including slashes (' / ') in",
-   strong("any"),
-   "of the step 2 entries will make the portal fail."),
-h6("The portal reads slashes as if you are naming folders,
-   so when those 'folders' don't exist, the app crashes."),
 
 ## PI first initial
 textInput(
@@ -513,11 +509,11 @@ observeEvent(input$auth_button, {
 # Gather file namefrom the supplied information in the UI
 surveyID <- reactive({
   paste(
-    input$pi_last,
-    input$pi_first,
-    input$genus,
-    input$sp,
-    str_sub(input$site, start = 1, end = 8),
+    gsub("\\/|\\.|\\_", "-", input$pi_last),
+    gsub("\\/|\\.|\\_", "-", input$pi_first),
+    gsub("\\/|\\.|\\_", "-", input$genus),
+    gsub("\\/|\\.|\\_", "-", input$sp),
+    gsub("\\/|\\.|\\_", "-", str_sub(input$site, start = 1, end = 8)),
     input$date,
     sep = '_')
   })
