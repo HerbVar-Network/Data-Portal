@@ -125,6 +125,13 @@ textInput(
   placeholder = "von Humboldt"
   ),
 
+# Provide a warning about slashes
+h5("Note: including slashes (' / ') in",
+   strong("any"),
+   "of the step 2 entries will make the portal fail."),
+h6("The portal reads slashes as if you are naming folders,
+   so when those 'folders' don't exist, the app crashes."),
+
 ## PI first initial
 textInput(
   inputId = "pi_first",
@@ -1005,39 +1012,39 @@ output$new_chk <- renderTable({
       rbind(
         # Any new entries anywhere
         data.frame("Errors" = ifelse(test = (!is.na(setdiff(site_new(),
-                                                            new_actual()$variable)) |
+                                                            new_actual()[2])) |
                                                !is.na(setdiff(plant_new_cols(),
-                                                              new_actual()$variable)) |
+                                                              new_actual()[2])) |
                                                !is.na(setdiff(repro_new_cols(),
-                                                              new_actual()$variable)) |
+                                                              new_actual()[2])) |
                                                !is.na(setdiff(bug_new_cols(),
-                                                              new_actual()$variable))),
+                                                              new_actual()[2]))),
                                      yes = error_msg.missing_new_cols,
                                      no = NA))
         # New rows added to siteData tab
         , data.frame("Errors" = ifelse(test = !is.na(setdiff(site_new(),
-                                                             new_actual()$variable)),
+                                                             new_actual()[2])),
                                        yes = paste0("From siteData tab, ",
                                                     "Please define ",
                                                     site_new()),
                                        no = NA))
         # New columns added to plantData
         , data.frame("Errors" = ifelse(test = !is.na(setdiff(plant_new_cols(),
-                                                             new_actual()$variable)),
+                                                             new_actual()[2])),
                                        yes = paste0("From plantData tab, ",
                                                     "Please define ",
                                                     plant_new_cols()),
                                        no = NA))
         # New columns added to reproData
         , data.frame("Errors" = ifelse(test = !is.na(setdiff(repro_new_cols(),
-                                                             new_actual()$variable)),
+                                                             new_actual()[2])),
                                        yes = paste0("From reproData tab, ",
                                                     "Please define ",
                                                     repro_new_cols()),
                                        no = NA))
         # New columns added to herbivoreData
         , data.frame("Errors" = ifelse(test = !is.na(setdiff(bug_new_cols(),
-                                                             new_actual()$variable)),
+                                                             new_actual()[2])),
                                        yes = paste0("From herbivoreData tab, ",
                                                     "Please define ",
                                                     bug_new_cols()),
