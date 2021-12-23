@@ -977,72 +977,78 @@ output$bug_chk <- renderTable({
   ## siteData new entries in "variable" column
 site_new <- reactive({
   if(is.null(input$file_upload)) { return(NULL) } else {
-  setdiff(site_actual()$variable,
-          c(site_actual()$variable[1:18], "NOTES TO DATA ENTERER:")) }
-  })
+    if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "siteData")) == 0){ return(NULL) }
+    else { setdiff(site_actual()$variable,
+              c(site_actual()$variable[1:18], "NOTES TO DATA ENTERER:")) }
+  }})
+
   ## plantData new columns
 plant_new_cols <- reactive({
   if(is.null(input$file_upload)) { return(NULL) } else {
-  setdiff(names(plant_actual()),
+    if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "plantData")) == 0){ return(NULL) }
+    else { setdiff(names(plant_actual()),
           names(dplyr::select(plant_actual(), surveyID:percLf30))) }
-  })
+  }})
 
   ## reproData new columns
 repro_new_cols <- reactive({
   if(is.null(input$file_upload)) { return(NULL) } else {
-    setdiff(names(repr_actual()),
+    if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "reproData")) == 0){ return(NULL) }
+    else { setdiff(names(repr_actual()),
             names(dplyr::select(repr_actual(), surveyID:notes))) }
-  })
+  }})
+
   ## herbivoreData new columns
 bug_new_cols <- reactive({
   if(is.null(input$file_upload)) { return(NULL) } else {
-    setdiff(names(bug_actual()),
+    if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "herbivoreData")) == 0){ return(NULL) }
+    else { setdiff(names(bug_actual()),
             names(dplyr::select(bug_actual(), surveyID:notes))) }
-})
+}})
 
 # Actual checks
 output$new_chk <- renderTable({
   if(is.null(input$file_upload)){ return(NULL) } else {
-    if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ box_error }
+    if(nrow(dplyr::filter(chosen_tabs(), chosen_tabs()[1] == "newColumns")) == 0){ return(NULL) }
     else {
       rbind(
         # Any new entries anywhere
         data.frame("Errors" = ifelse(test = (!is.na(setdiff(site_new(),
-                                                            new_actual()[2])) |
+                                                            new_actual()$newColumnName)) |
                                                !is.na(setdiff(plant_new_cols(),
-                                                              new_actual()[2])) |
+                                                              new_actual()$newColumnName)) |
                                                !is.na(setdiff(repro_new_cols(),
-                                                              new_actual()[2])) |
+                                                              new_actual()$newColumnName)) |
                                                !is.na(setdiff(bug_new_cols(),
-                                                              new_actual()[2]))),
+                                                              new_actual()$newColumnName))),
                                      yes = error_msg.missing_new_cols,
                                      no = NA))
         # New rows added to siteData tab
         , data.frame("Errors" = ifelse(test = !is.na(setdiff(site_new(),
-                                                             new_actual()[2])),
+                                                             new_actual()$newColumnName)),
                                        yes = paste0("From siteData tab, ",
-                                                    "Please define ",
+                                                    "please define ",
                                                     site_new()),
                                        no = NA))
         # New columns added to plantData
         , data.frame("Errors" = ifelse(test = !is.na(setdiff(plant_new_cols(),
-                                                             new_actual()[2])),
+                                                             new_actual()$newColumnName)),
                                        yes = paste0("From plantData tab, ",
-                                                    "Please define ",
+                                                    "please define ",
                                                     plant_new_cols()),
                                        no = NA))
         # New columns added to reproData
         , data.frame("Errors" = ifelse(test = !is.na(setdiff(repro_new_cols(),
-                                                             new_actual()[2])),
+                                                             new_actual()$newColumnName)),
                                        yes = paste0("From reproData tab, ",
-                                                    "Please define ",
+                                                    "please define ",
                                                     repro_new_cols()),
                                        no = NA))
         # New columns added to herbivoreData
         , data.frame("Errors" = ifelse(test = !is.na(setdiff(bug_new_cols(),
-                                                             new_actual()[2])),
+                                                             new_actual()$newColumnName)),
                                        yes = paste0("From herbivoreData tab, ",
-                                                    "Please define ",
+                                                    "please define ",
                                                     bug_new_cols()),
                                        no = NA))
         #, data.frame("Errors" = ifelse(test = , yes = , no = ))
